@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MonopolyBot": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
