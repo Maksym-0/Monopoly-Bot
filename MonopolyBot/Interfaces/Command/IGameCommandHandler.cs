@@ -6,7 +6,7 @@ namespace MonopolyBot.Telegram.Interfaces.Command
     {
         Task HandleAllGameStatus(Message message);
         Task HandleGameStatus(Message message);
-        Task HandleRollDice(Message message);
+        Task HandleRollDices(Message message);
         Task HandleBuy(Message message);
         Task HandlePayRent(Message message);
         Task HandlePayToLeavePrison(Message message);

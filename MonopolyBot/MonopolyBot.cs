@@ -212,7 +212,7 @@ namespace MonopolyBot
                     await gameMessageHandler.HandleGameStatus(message);
                     return;
                 case "Roll Dice":
-                    await gameMessageHandler.HandleRollDice(message);
+                    await gameMessageHandler.HandleRollDices(message);
                     return;
                 case "Buy":
                     await gameMessageHandler.HandleBuy(message);

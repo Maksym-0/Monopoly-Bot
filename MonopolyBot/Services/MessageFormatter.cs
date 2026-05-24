@@ -119,6 +119,165 @@ namespace MonopolyBot.Telegram.Services
 
             return playersStatus;
         }
+        
+        public string BuildSelfMoveMessage(MoveDto moveDto)
+        {
+            string selfMessage;
+            string selfDublResult;
+
+            if (moveDto.Player.Dices.Dubl && moveDto.Player.Dices.CountOfDubles == 3)
+            {
+                selfDublResult = "\n💥 Це був ваш третій дубль підряд! Ви відправляєтесь до тюрми.";
+
+                selfMessage =
+                    $"🎲 Ви кинули кубики: {moveDto.Player.Dices.Dice1} + {moveDto.Player.Dices.Dice2} = {moveDto.Player.Dices.DiceSum}.{selfDublResult}\n\n" +
+                    "Перевірте статус гри для деталей.";
+            }
+            else
+            {
+                selfDublResult = moveDto.Player.Dices.Dubl ? $"\n🔥 Ви викинули дубль №{moveDto.Player.Dices.CountOfDubles}! Маєте додатковий хід" : "";
+
+                selfMessage =
+                    $"🎲 Ви кинули кубики: {moveDto.Player.Dices.Dice1} + {moveDto.Player.Dices.Dice2} = {moveDto.Player.Dices.DiceSum}.{selfDublResult}\n" +
+                    $"Ви пересунулись на клітинку *{moveDto.Cell.Name}* (#{moveDto.Cell.Number}).\n" +
+                    $"{moveDto.CellMessage}\n\n" +
+                    "Перевірте статус гри для деталей.";
+            }
+
+            return selfMessage;
+        }
+        public string BuildOthersMoveMessage(MoveDto moveDto)
+        {
+            string othersMessage;
+            string othersDublResult;
+
+            if (moveDto.Player.Dices.Dubl && moveDto.Player.Dices.CountOfDubles == 3)
+            {
+                othersDublResult = "\n💥 Це був його третій дубль підряд! Він відправляється до тюрми.";
+
+                othersMessage =
+                    $"🎲 {moveDto.Player.Name} кинув кубики: {moveDto.Player.Dices.Dice1} + {moveDto.Player.Dices.Dice2} = {moveDto.Player.Dices.DiceSum}.{othersDublResult}\n\n" +
+                    "Перевірте статус гри для деталей.";
+            }
+            else
+            {
+                othersDublResult = moveDto.Player.Dices.Dubl ? $"\n🔥 Викинуто дубль №{moveDto.Player.Dices.CountOfDubles}! Гравець має додатковий хід" : "";
+
+                othersMessage =
+                    $"🎲 {moveDto.Player.Name} кинув кубики: {moveDto.Player.Dices.Dice1} + {moveDto.Player.Dices.Dice2} = {moveDto.Player.Dices.DiceSum}.{othersDublResult}\n" +
+                    $"Перейшов на клітинку *{moveDto.Cell.Name}* (#{moveDto.Cell.Number}).\n" +
+                    $"{moveDto.CellMessage}\n\n" +
+                    "Перевірте статус гри для деталей.";
+            }
+
+            return othersMessage;
+        }
+
+        public string BuildSelfBuyMessage(BuyDto buyDto)
+        {
+            string selfMessage =
+                    $"Ви купили клітину №{buyDto.CellNumber} ({buyDto.CellName}) [{buyDto.CellMonopolyType}] за {buyDto.Price}.\n" +
+                    $"Баланс: {buyDto.OldBalance} → {buyDto.NewBalance}.";
+
+            if (buyDto.HasMonopoly != null)
+            {
+                selfMessage += $"\n{((bool)buyDto.HasMonopoly ? "🎉 У вас тепер монополія!" : "Монополії ще немає.")}";
+            }
+
+            return selfMessage;
+        }
+        public string BuildOthersBuyMessage(BuyDto butDto)
+        {
+            string othersMessage =
+                    $"{butDto.PlayerName} придбав клітину №{butDto.CellNumber} ({butDto.CellName}) [{butDto.CellMonopolyType}] за {butDto.Price}. " +
+                    $"Баланс: {butDto.OldBalance} → {butDto.NewBalance}.";
+
+            if (butDto.HasMonopoly != null)
+            {
+                othersMessage += $"\n{((bool)butDto.HasMonopoly ? "💥💥💥Тепер у нього монополія!💥💥💥" : "")}";
+            }
+
+            return othersMessage;
+        }
+
+        public string BuildSelfPayMessage(PayDto result)
+        {
+            string selfMessage = $"Оплата {result.Amount}$ здійснена. Ваш баланс: {result.NewPlayerBalance}$";
+
+            if (result.ReceiverId != null)
+            {
+                selfMessage = $"Оплата {result.Amount}$ на рахунок {result.ReceiverName} здійснена.\n" +
+                    $"Ваш баланс: {result.NewPlayerBalance}$\n" +
+                    $"Баланс {result.ReceiverName}: {result.NewReceiverBalance}$";
+            }
+            else
+            {
+                selfMessage = $"Оплата {result.Amount}$ за вихід з тюрми здійснена. Ваш баланс: {result.NewPlayerBalance}$";
+            }
+
+            return selfMessage;
+        }
+        public string BuildOthersPayMessage(PayDto result)
+        {
+            string othersMessage;
+
+            if (result.ReceiverId != null)
+            {
+                othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ гравцю {result.ReceiverName}.\n" +
+                    $"{result.PlayerName} баланс: {result.NewPlayerBalance}$\n" +
+                    $"{result.ReceiverName} баланс: {result.NewReceiverBalance}$";
+            }
+            else
+            {
+                othersMessage = $"{result.PlayerName} сплатив за вихід з тюрми {result.Amount}$. " +
+                    $"{result.PlayerName} баланс: {result.NewPlayerBalance}$";
+            }
+
+            return othersMessage;
+        }
+
+        public string BuildSelfLevelChangeMessage(LevelChangeDto levelChangeDto)
+        {
+            string selfMessage;
+
+            if(levelChangeDto.NewLevel > levelChangeDto.OldLevel)
+            {
+                selfMessage =
+                    $"🔼 Ви підвищили рівень клітини №{levelChangeDto.CellNumber} ({levelChangeDto.CellName}) " +
+                    $"з {levelChangeDto.OldLevel} до {levelChangeDto.NewLevel}.\n" +
+                    $"Ваш баланс: {levelChangeDto.OldPlayerBalance} → {levelChangeDto.NewPlayerBalance}.";
+            }
+            else
+            {
+                selfMessage =
+                    $"🔽 Ви знизили рівень клітини №{levelChangeDto.CellNumber} ({levelChangeDto.CellName}) " +
+                    $"з {levelChangeDto.OldLevel} до {levelChangeDto.NewLevel}.\n" +
+                    $"Ваш баланс: {levelChangeDto.OldPlayerBalance} → {levelChangeDto.NewPlayerBalance}.";
+            }
+
+            return selfMessage;
+        }
+        public string BuildOthersLevelChangeMessage(LevelChangeDto levelChangeDto)
+        {
+            string othersMessage;
+            
+            if(levelChangeDto.NewLevel > levelChangeDto.OldLevel)
+            {
+                othersMessage =
+                    $"🔼 {levelChangeDto.PlayerName} підвищив рівень клітини №{levelChangeDto.CellNumber} ({levelChangeDto.CellName}) " +
+                    $"з {levelChangeDto.OldLevel} до {levelChangeDto.NewLevel}.\n" +
+                    $"Його баланс: {levelChangeDto.OldPlayerBalance} → {levelChangeDto.NewPlayerBalance}.";
+            }
+            else
+            {
+                othersMessage =
+                    $"🔽{levelChangeDto.PlayerName} знизив рівень клітини №{levelChangeDto.CellNumber} ({levelChangeDto.CellName}) " +
+                    $"з {levelChangeDto.OldLevel} до {levelChangeDto.NewLevel}.\n" +
+                    $"Його баланс: {levelChangeDto.OldPlayerBalance} → {levelChangeDto.NewPlayerBalance}.";
+            }
+
+            return othersMessage;
+        }
 
         private string BuildCellStatusMessage(GameStateDto game, CellDto cell, List<PlayerDto> playersOnCell)
         {

@@ -1,4 +1,5 @@
-﻿using MonopolyBot.Core.Interfaces.Clients;
+﻿using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Interfaces.Clients;
 using MonopolyBot.Core.Interfaces.DataBase.UnitOfWork;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Core.Models.Api.DTO.Accounts;
@@ -22,20 +23,36 @@ namespace MonopolyBot.Application.Service
             _authorization = authorization;
         }
 
-        public async Task<AccServiceResponse> GetMyDataAsync(long chatId)
+        public async Task<ServiceResponse<ProfileInfo>> GetMyDataAsync(long chatId)
         {
-            User user = await _authorization.GetAuthorizedUserAsync(chatId);
+            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
 
-            return new AccServiceResponse()
+            if (!authResult.IsAuthorized)
+            {
+                return new ServiceResponse<ProfileInfo>()
+                {
+                    Success = false,
+                    Message = authResult.Message,
+                    Data = null,
+                    ErrorType = ErrorType.Unauthorized
+                };
+            }
+
+            ProfileInfo profile = new ProfileInfo()
+            {
+                AccountId = authResult.User!.AccountId,
+                UserId = authResult.User.Id,
+                Name = authResult.User.Name
+            };
+
+            return new ServiceResponse<ProfileInfo>()
             {
                 Success = true,
-                Message = "Ви авторизовані",
-                Name = user.Name,
-                Id = user.Id,
-                AccountId = user.AccountId
+                Message = authResult.Message,
+                Data = profile
             };
         }
-        public async Task<AccountDto> RegisterAsync(string name, string password)
+        public async Task<ServiceResponse<AccountDto>> RegisterAsync(string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
@@ -45,10 +62,21 @@ namespace MonopolyBot.Application.Service
             ApiResponse<AccountDto> data = await _accountClient.RegisterAsync(account);
 
             if (!data.Success)
-                throw new Exception(data.Message);
-            return data.Data;
+                return new ServiceResponse<AccountDto>()
+                {
+                    Success = false,
+                    Message = data.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
+            return new ServiceResponse<AccountDto>()
+            {
+                Success = true,
+                Message = "Реєстрація успішна",
+                Data = data.Data
+            };
         }
-        public async Task<AccountDto> LoginAsync(long chatId, string name, string password)
+        public async Task<ServiceResponse<AccountDto>> LoginAsync(long chatId, string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
@@ -59,7 +87,13 @@ namespace MonopolyBot.Application.Service
 
             if (!data.Success)
             {
-                throw new Exception(data.Message);
+                return new ServiceResponse<AccountDto>()
+                {
+                    Success = false,
+                    Message = data.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
             }
 
             User? user = await _unitOfWork.Users.GetByChatId(chatId);
@@ -87,14 +121,18 @@ namespace MonopolyBot.Application.Service
                 user.JWT = data.Data.Token;
                 user.CreatedAt = data.Data.CreatedAt;
                 user.ExpiresAt = data.Data.ExpiresAt;
-
-                await _unitOfWork.Users.Update(user);
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return data.Data.Account;
+            
+            return new ServiceResponse<AccountDto>()
+            {
+                Success = true,
+                Message = "Авторизація успішна",
+                Data = data.Data.Account
+            };
         }
-        public async Task<DeleteAccountDto> DeleteAccountAsync(long chatId, string name, string password)
+        public async Task<ServiceResponse<DeleteAccountDto>> DeleteAccountAsync(long chatId, string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
@@ -107,11 +145,22 @@ namespace MonopolyBot.Application.Service
             {
                 await _unitOfWork.Users.DeleteByChatId(chatId);
                 await _unitOfWork.SaveChangesAsync();
-                return data.Data;
+                return new ServiceResponse<DeleteAccountDto>()
+                {
+                    Success = true,
+                    Message = "Акаунт успішно видалено",
+                    Data = data.Data
+                };
             }
             else
             {
-                throw new Exception(data.Message);
+                return new ServiceResponse<DeleteAccountDto>()
+                {
+                    Success = false,
+                    Message = data.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
             }
         }
     }

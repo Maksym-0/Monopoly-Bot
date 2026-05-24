@@ -3,6 +3,7 @@ using Telegram.Bot;
 using MonopolyBot.Telegram.Interfaces.Command;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Models.Services;
 
 namespace MonopolyBot.Telegram.Handlers.Command
 {
@@ -31,24 +32,8 @@ namespace MonopolyBot.Telegram.Handlers.Command
         }
         public async Task HandleStartDeleteAccount(Message message)
         {
-            try
-            {
-                await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingDeleteAccount);
-                await _botClient.SendMessage(message.Chat.Id, "Видалення аккаунту розпочато. Введіть ім'я.");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _contextService.ClearContextAsync(message.Chat.Id);
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-                return;
-            }
-            catch (Exception ex)
-            {
-                await _contextService.ClearContextAsync(message.Chat.Id);
-                await _botClient.SendMessage(message.Chat.Id, $"Помилка при видаленні акаунту: {ex.Message}");
-                return;
-            }
+            await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingDeleteAccount);
+            await _botClient.SendMessage(message.Chat.Id, "Видалення аккаунту розпочато. Введіть ім'я.");
         }
         public async Task HandleRoomsMenu(Message message)
         {
@@ -59,16 +44,22 @@ namespace MonopolyBot.Telegram.Handlers.Command
         {
             try
             {
-                var data = await _accService.GetMyDataAsync(message.Chat.Id);
+                ServiceResponse<ProfileInfo> response = await _accService.GetMyDataAsync(message.Chat.Id);
+                if (!response.Success)
+                {
+                    await _contextService.ClearContextAsync(message.Chat.Id);
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
+
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
                 await _botClient.SendMessage(message.Chat.Id,
-                    $"Ваше ID: {data.Id}\n" +
-                    $"Ваше ім'я: {data.Name}");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _contextService.ClearContextAsync(message.Chat.Id);
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    $"Ваше ID: {response.Data.UserId}\n" +
+                    $"Ваше ім'я: {response.Data.Name}");
             }
             catch (Exception ex)
             {

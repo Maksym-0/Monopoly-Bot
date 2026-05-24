@@ -6,6 +6,7 @@ using MonopolyBot.Core.Models.Bot;
 using MonopolyBot.Core.Models.Api.DTO.Rooms;
 using MonopolyBot.Telegram.Interfaces.Services;
 using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Models.Services;
 
 namespace MonopolyBot.Telegram.Handlers.Status
 {
@@ -30,20 +31,37 @@ namespace MonopolyBot.Telegram.Handlers.Status
         {
             try
             {
-                JoinRoomDto roomResponse = await _roomService.JoinRoomAsync(message.Chat.Id, status.RoomId.Value, message.Text);
-                await _botClient.SendMessage(message.Chat.Id, $"Ви приєдналися до кімнати {roomResponse.Room.RoomId}.");
-                if (roomResponse.IsGameStarted)
+                ServiceResponse<JoinRoomDto> response = await _roomService.JoinRoomAsync(message.Chat.Id, status.RoomId.Value, message.Text);
+                if(!response.Success)
                 {
-                    List<long> chatIds = await _roomService.GetChatIdsInRoomAsync(message.Chat.Id);
-                    await _broadcastService.SendGameStartAsync(chatIds, roomResponse.Room.RoomId);
+                    status.Status = BotState.None;
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
+
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                await _botClient.SendMessage(message.Chat.Id, $"Ви приєдналися до кімнати {response.Data.Room.RoomId}.");
+                if (response.Data.IsGameStarted)
+                {
+                    ServiceResponse<List<long>> chatIds = await _roomService.GetChatIdsInRoomAsync(message.Chat.Id);
+                    if(!chatIds.Success)
+                    {
+                        status.Status = BotState.None;
+                        await _botClient.SendMessage(message.Chat.Id, chatIds.Message);
+
+                        if(chatIds.ErrorType == ErrorType.Unauthorized)
+                        {
+                            await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                        }
+                        return;
+                    }
+                    await _broadcastService.SendGameStartAsync(chatIds.Data, response.Data.Room.RoomId);
                 }
                 status.Status = BotState.InRoom;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                status.Status = BotState.None;
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -57,11 +75,16 @@ namespace MonopolyBot.Telegram.Handlers.Status
         }
         public async Task HandleCreateRoomStatus(Message message, ChatStatus status)
         {
-            if (status.MaxNumberOfPlayers == null)
+            try
             {
-                try
+                if (status.MaxNumberOfPlayers == null)
                 {
-                    int maxNumberOfPlayers = Convert.ToInt32(message.Text);
+                    if (!int.TryParse(message.Text, out int maxNumberOfPlayers))
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "⚠️ Введіть коректное число для максимальної кількости гравців:");
+                        return;
+                    }
+
                     if (maxNumberOfPlayers > 4 || maxNumberOfPlayers < 2)
                     {
                         await _botClient.SendMessage(message.Chat.Id, "❌ Кількість гравців повинна бути від 2 до 4. Спробуйте ще раз:");
@@ -73,31 +96,36 @@ namespace MonopolyBot.Telegram.Handlers.Status
 
                     await _botClient.SendMessage(message.Chat.Id, "Оберіть тип кімнати:", replyMarkup: KeyboardMarkups.createRoomInlineMarkup);
                 }
-                catch (FormatException)
+                else
                 {
-                    await _botClient.SendMessage(message.Chat.Id, "⚠️ Введіть коректне число для максимальної кількості гравців:");
-                    return;
+                    await _botClient.SendMessage(message.Chat.Id, "Оберіть тип кімнати:", replyMarkup: KeyboardMarkups.createRoomInlineMarkup);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                await _botClient.SendMessage(message.Chat.Id, "Оберіть тип кімнати:", replyMarkup: KeyboardMarkups.createRoomInlineMarkup);
+                await _botClient.SendMessage(message.Chat.Id, $"Помилка при створенні кімнати: {ex.Message}");
+                return;
             }
         }
         public async Task HandleCreateRoomPasswordStatus(Message message, ChatStatus status)
         {
             try
             {
-                RoomDto roomResponse = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers.Value, message.Text);
-                await _botClient.SendMessage(message.Chat.Id, $"Кімната {roomResponse.RoomId} створена.");
+                ServiceResponse<RoomDto> response = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers.Value, message.Text);
+                if(!response.Success)
+                {
+                    status.Status = BotState.None;
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
+
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                await _botClient.SendMessage(message.Chat.Id, $"Кімната {response.Data.RoomId} створена.");
                 status.Status = BotState.InRoom;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-                status.Status = BotState.None;
-                return;
             }
             catch (Exception ex)
             {

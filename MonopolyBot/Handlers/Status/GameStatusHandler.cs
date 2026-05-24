@@ -6,6 +6,7 @@ using MonopolyBot.Core.Models.Api.DTO.Games;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Telegram.Interfaces.Services;
 using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Models.Services;
 
 namespace MonopolyBot.Telegram.Handlers.Status
 {
@@ -14,14 +15,16 @@ namespace MonopolyBot.Telegram.Handlers.Status
         ITelegramBotClient _botClient;
 
         IContextService _contextService;
+        IMessageFormatter _messageFormatter;
         IBroadcastService _broadcastService;
 
         IGameService _gameService;
 
-        public GameStatusHandler(ITelegramBotClient botClient, IContextService contextService, IBroadcastService broadcastService, IGameService gameService)
+        public GameStatusHandler(ITelegramBotClient botClient, IContextService contextService, IMessageFormatter messageFormatter, IBroadcastService broadcastService, IGameService gameService)
         {
             _botClient = botClient;
             _contextService = contextService;
+            _messageFormatter = messageFormatter;
             _broadcastService = broadcastService;
             _gameService = gameService;
         }
@@ -30,30 +33,42 @@ namespace MonopolyBot.Telegram.Handlers.Status
         {
             try
             {
-                int cellNumber = Convert.ToInt32(message.Text);
-                LevelChangeDto result = await _gameService.LevelUpCellAsync(message.Chat.Id, cellNumber);
+                if (!int.TryParse(message.Text, out int cellNumber))
+                {
+                    await _botClient.SendMessage(message.Chat.Id, "⚠️ Будь ласка, введіть коректний номер клітини.");
+                    return;
+                }
 
-                string selfMessage =
-                    $"✅ Ви підвищили рівень клітини №{result.CellNumber} ({result.CellName}) " +
-                    $"з {result.OldLevel} до {result.NewLevel}.\n" +
-                    $"Ваш баланс: {result.OldPlayerBalance} → {result.NewPlayerBalance}.";
+                ServiceResponse<LevelChangeDto> response = await _gameService.LevelUpCellAsync(message.Chat.Id, cellNumber);
+                if (!response.Success)
+                {
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
 
-                string othersMessage =
-                    $"🔼 {result.PlayerName} підвищив рівень клітини №{result.CellNumber} ({result.CellName}) " +
-                    $"з {result.OldLevel} до {result.NewLevel}.\n" +
-                    $"Його баланс: {result.OldPlayerBalance} → {result.NewPlayerBalance}.";
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                LevelChangeDto result = response.Data;
+
+                string selfMessage =_messageFormatter.BuildSelfLevelChangeMessage(result);
+                string othersMessage = _messageFormatter.BuildOthersLevelChangeMessage(result);
                 
-                List<long> chatIdsInGame = await _gameService.GetChatIdsInGameAsync(message.Chat.Id);
-                await _broadcastService.SendPersonalizedMessageAsync(message.Chat.Id, selfMessage, chatIdsInGame, othersMessage);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-            }
-            catch (FormatException)
-            {
-                await _botClient.SendMessage(message.Chat.Id, "Будь ласка, введіть коректний номер клітини.");
+                ServiceResponse<List<long>> chatIdsInGame = await _gameService.GetChatIdsInGameAsync(message.Chat.Id);
+                if(!chatIdsInGame.Success)
+                {
+                    await _botClient.SendMessage(message.Chat.Id, chatIdsInGame.Message);
+
+                    if(chatIdsInGame.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                await _broadcastService.SendPersonalizedMessageAsync(message.Chat.Id, selfMessage, chatIdsInGame.Data, othersMessage);
             }
             catch (Exception ex)
             {
@@ -69,28 +84,42 @@ namespace MonopolyBot.Telegram.Handlers.Status
         {
             try
             {
-                int cellNumber = Convert.ToInt32(message.Text);
-                LevelChangeDto result = await _gameService.LevelDownCellAsync(message.Chat.Id, cellNumber);
+                if (!int.TryParse(message.Text, out int cellNumber))
+                {
+                    await _botClient.SendMessage(message.Chat.Id, "⚠️ Будь ласка, введіть коректний номер клітини.");
+                    return;
+                }
 
-                string selfMessage =
-                    $"Клітина №{result.CellNumber} ({result.CellName}) знижена з рівня {result.OldLevel} до {result.NewLevel}.\n" +
-                    $"Ваш баланс: {result.OldPlayerBalance} → {result.NewPlayerBalance}";
+                ServiceResponse<LevelChangeDto> response = await _gameService.LevelDownCellAsync(message.Chat.Id, cellNumber);
+                if (!response.Success)
+                {
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
 
-                string othersMessage =
-                    $"{result.PlayerName} знизив рівень клітини №{result.CellNumber} ({result.CellName}) " +
-                    $"з {result.OldLevel} до {result.NewLevel}.";
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
 
-                List<long> chatIdsInGame = await _gameService.GetChatIdsInGameAsync(message.Chat.Id);
-                await _broadcastService.SendPersonalizedMessageAsync(message.Chat.Id, selfMessage, chatIdsInGame, othersMessage);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-            }
-            catch (FormatException)
-            {
-                await _botClient.SendMessage(message.Chat.Id, "Будь ласка, введіть коректний номер клітини.");
+                LevelChangeDto result = response.Data;
+
+                string selfMessage = _messageFormatter.BuildSelfLevelChangeMessage(result);
+                string othersMessage = _messageFormatter.BuildOthersLevelChangeMessage(result);
+
+                ServiceResponse<List<long>> chatIdsInGame = await _gameService.GetChatIdsInGameAsync(message.Chat.Id);
+                if(!chatIdsInGame.Success)
+                {
+                    await _botClient.SendMessage(message.Chat.Id, chatIdsInGame.Message);
+
+                    if(chatIdsInGame.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                await _broadcastService.SendPersonalizedMessageAsync(message.Chat.Id, selfMessage, chatIdsInGame.Data, othersMessage);
             }
             catch (Exception ex)
             {

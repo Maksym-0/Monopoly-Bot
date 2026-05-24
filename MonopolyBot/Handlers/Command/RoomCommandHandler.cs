@@ -35,7 +35,21 @@ namespace MonopolyBot.Telegram.Handlers.Command
         {
             try
             {
-                List<RoomDto> rooms = await _roomService.GetRoomsAsync(message.Chat.Id);
+                ServiceResponse<List<RoomDto>> response = await _roomService.GetRoomsAsync(message.Chat.Id);
+                if (!response.Success)
+                {
+                    await _contextService.SetStateAsync(message.Chat.Id, BotState.None);
+                    await _botClient.SendMessage(message.Chat.Id, response.Message);
+
+                    if(response.ErrorType == ErrorType.Unauthorized)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    }
+                    return;
+                }
+
+                List<RoomDto> rooms = response.Data;
+
                 if (rooms.Count == 0)
                 {
                     await _botClient.SendMessage(message.Chat.Id, "Немає доступних кімнат.");
@@ -43,14 +57,27 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 else
                 {
                     await _botClient.SendMessage(message.Chat.Id, "Доступні кімнати:");
-                    AccServiceResponse user = await _accService.GetMyDataAsync(message.Chat.Id);
+
+                    ServiceResponse<ProfileInfo> userResponse = await _accService.GetMyDataAsync(message.Chat.Id);
+                    if (!userResponse.Success)
+                    {
+                        await _contextService.SetStateAsync(message.Chat.Id, BotState.None);
+                        await _botClient.SendMessage(message.Chat.Id, userResponse.Message);
+
+                        if(userResponse.ErrorType == ErrorType.Unauthorized)
+                        {
+                            await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                        }
+                        return;
+                    }
+
                     foreach (var room in rooms)
                     {
                         bool playerInside = false;
                         InlineKeyboardMarkup keyboardMarkup;
                         foreach (var player in room.Players)
                         {
-                            if (player.AccountId == user.AccountId)
+                            if (player.AccountId == userResponse.Data.AccountId)
                                 playerInside = true;
                         }
                         if (playerInside && room.InGame)
@@ -88,13 +115,6 @@ namespace MonopolyBot.Telegram.Handlers.Command
                     }
                 }
 
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await _contextService.SetStateAsync(message.Chat.Id, BotState.None);
-                await _botClient.SendMessage(message.Chat.Id, ex.Message);
-                await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-                return;
             }
             catch (Exception ex)
             {

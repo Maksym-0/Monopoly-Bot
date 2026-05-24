@@ -1,10 +1,12 @@
-﻿using MonopolyBot.Core.Interfaces.Clients;
+﻿using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Interfaces.Clients;
 using MonopolyBot.Core.Interfaces.DataBase.UnitOfWork;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Core.Models.Api.DTO.Rooms;
 using MonopolyBot.Core.Models.Api.Requests;
 using MonopolyBot.Core.Models.Api.Responses;
 using MonopolyBot.Core.Models.Bot;
+using MonopolyBot.Core.Models.Services;
 
 namespace MonopolyBot.Application.Service
 {
@@ -21,19 +23,50 @@ namespace MonopolyBot.Application.Service
             _roomClient = roomClient;
         }
 
-        public async Task<List<RoomDto>> GetRoomsAsync(long chatId)
+        public async Task<ServiceResponse<List<RoomDto>>> GetRoomsAsync(long chatId)
         {
-            User? user = await _authorization.GetAuthorizedUserAsync(chatId);
+            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
+            if(!authResult.IsAuthorized)
+                return new ServiceResponse<List<RoomDto>>
+                {
+                    Success = false,
+                    Message = authResult.Message,
+                    Data = null,
+                    ErrorType = ErrorType.Unauthorized
+                };
+            User user = authResult.User;
 
             ApiResponse<List<RoomDto>> response = await _roomClient.GetRoomsAsync(user.JWT);
             if (!response.Success)
-                throw new Exception(response.Message);
+                return new ServiceResponse<List<RoomDto>>
+                {
+                    Success = false,
+                    Message = response.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
 
-            return response.Data;
+            return new ServiceResponse<List<RoomDto>>
+            {
+                Success = true,
+                Message = "Список кімнат отримано успішно",
+                Data = response.Data
+            };
         }
-        public async Task<RoomDto> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password)
+        public async Task<ServiceResponse<RoomDto>> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password)
         {
-            User user = await _authorization.GetAuthorizedUserAsync(chatId);
+            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
+            if (!authResult.IsAuthorized)
+            {
+                return new ServiceResponse<RoomDto>()
+                {
+                    Success = false,
+                    Message = authResult.Message,
+                    Data = null,
+                    ErrorType = ErrorType.Unauthorized
+                };
+            }
+            User user = authResult.User;
 
             ApiResponse<RoomDto> response = await _roomClient.CreateRoomAsync(user.JWT, 
                 new CreateRoomRequest
@@ -43,18 +76,39 @@ namespace MonopolyBot.Application.Service
             });
 
             if (!response.Success)
-                throw new Exception(response.Message);
+                return new ServiceResponse<RoomDto>()
+                {
+                    Success = false,
+                    Message = response.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
 
             user.RoomId = response.Data.RoomId;
 
-            await _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
-            return response.Data;
+            return new ServiceResponse<RoomDto>
+            {
+                Success = true,
+                Message = "Кімната створена успішно",
+                Data = response.Data
+            };
         }
-        public async Task<JoinRoomDto> JoinRoomAsync(long chatId, Guid roomId, string? password)
+        public async Task<ServiceResponse<JoinRoomDto>> JoinRoomAsync(long chatId, Guid roomId, string? password)
         {
-            User user = await _authorization.GetAuthorizedUserAsync(chatId);
+            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
+            if(!authResult.IsAuthorized)
+            {
+                return new ServiceResponse<JoinRoomDto>()
+                {
+                    Success = false,
+                    Message = authResult.Message,
+                    Data = null,
+                    ErrorType = ErrorType.Unauthorized
+                };
+            }
+            User user = authResult.User;
 
             ApiResponse<JoinRoomDto> response = await _roomClient.JoinRoomAsync(user.JWT, 
                 new JoinRoomRequest
@@ -64,7 +118,13 @@ namespace MonopolyBot.Application.Service
             });
 
             if (!response.Success)
-                throw new Exception(response.Message);
+                return new ServiceResponse<JoinRoomDto>()
+                {
+                    Success = false,
+                    Message = response.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
             
             user.RoomId = roomId;
             user.GameId = response.Data.Room.GameId;
@@ -79,42 +139,92 @@ namespace MonopolyBot.Application.Service
                 }
             }
 
-            await _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
-            return response.Data;
+            return new ServiceResponse<JoinRoomDto>
+            {
+                Success = true,
+                Message = "Ви приєднались до кімнати",
+                Data = response.Data
+            };
         }
-        public async Task<QuitRoomDto> QuitRoomAsync(long chatId)
+        public async Task<ServiceResponse<QuitRoomDto>> QuitRoomAsync(long chatId)
         {
-            User user = await _authorization.GetAuthorizedUserAsync(chatId);
+            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
+            if(!authResult.IsAuthorized)
+            {
+                return new ServiceResponse<QuitRoomDto>()
+                {
+                    Success = false,
+                    Message = authResult.Message,
+                    Data = null,
+                    ErrorType = ErrorType.Unauthorized
+                };
+            }
+            User user = authResult.User;
 
             ApiResponse<QuitRoomDto> response = await _roomClient.QuitRoomAsync(user.JWT);
 
             if (!response.Success)
-                throw new Exception(response.Message);
+                return new ServiceResponse<QuitRoomDto>()
+                {
+                    Success = false,
+                    Message = response.Message,
+                    Data = null,
+                    ErrorType = ErrorType.ApiError
+                };
 
             user.RoomId = null;
             user.GameId = null;
-            await _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
             
-            return response.Data;
+            return new ServiceResponse<QuitRoomDto>
+            {
+                Success = true,
+                Message = "Ви покинули кімнату",
+                Data= response.Data
+            };
         }
 
-        public async Task<List<long>> GetChatIdsInRoomAsync(long playerChatId)
+        public async Task<ServiceResponse<List<long>>> GetChatIdsInRoomAsync(long playerChatId)
         {
             User? user = await _unitOfWork.Users.GetByChatId(playerChatId);
-            if(user == null)
-                throw new Exception("Користувач не знайдений");
+            if (user == null)
+                return new ServiceResponse<List<long>>()
+                {
+                    Success = false,
+                    Message = "Користувач не знайдений",
+                    Data = null,
+                    ErrorType = ErrorType.ServiceError
+                };
             if (user.RoomId == null)
-                throw new Exception("Користувач не перебуває в кімнату");
+                return new ServiceResponse<List<long>>()
+                {
+                    Success = false,
+                    Message = "Користувач не перебуває в кімнаті",
+                    Data = null,
+                    ErrorType = ErrorType.ServiceError
+                };
 
             List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomId(user.RoomId.Value);
 
-            if(usersInRoom == null || usersInRoom.Count == 0)
-                throw new Exception("Користувачі в кімнаті не знайдені");
+            if (usersInRoom == null || usersInRoom.Count == 0)
+                return new ServiceResponse<List<long>>()
+                {
+                    Success = false,
+                    Message = "Користувачі в кімнаті не знайдені",
+                    Data = null,
+                    ErrorType = ErrorType.ServiceError
+                };
 
-            return usersInRoom.Select(u => u.ChatId).ToList();
+            List<long> chatIds = usersInRoom.Select(u => u.ChatId).ToList();
+
+            return new ServiceResponse<List<long>>()
+            {
+                Success = true,
+                Message = "Id гравців в кімнаті отримано",
+                Data = chatIds
+            };
         }
     }
 }

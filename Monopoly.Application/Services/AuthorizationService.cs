@@ -47,12 +47,5 @@ namespace MonopolyBot.Application.Service
                 };
             
         }
-        public async Task<User> GetAuthorizedUserAsync(long chatId)
-        {
-            var data = await GetAuthorizationResultAsync(chatId);
-            if (!data.IsAuthorized)
-                throw new UnauthorizedAccessException(data.Message);
-            return data.User;
-        }
     }
 }

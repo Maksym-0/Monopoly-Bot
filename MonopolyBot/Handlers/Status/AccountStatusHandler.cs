@@ -4,6 +4,7 @@ using MonopolyBot.Telegram.Interfaces.Status;
 using MonopolyBot.Core.Models.Api.DTO.Accounts;
 using MonopolyBot.Core.Models.Bot;
 using MonopolyBot.Core.Interfaces.Services;
+using MonopolyBot.Core.Models.Services;
 
 namespace MonopolyBot.Telegram.Handlers.Status
 {
@@ -34,8 +35,14 @@ namespace MonopolyBot.Telegram.Handlers.Status
             {
                 try
                 {
-                    AccountDto loginData = await _accService.LoginAsync(message.Chat.Id, status.AccountName, message.Text);
-                    await _botClient.SendMessage(message.Chat.Id, $"Ви увійшли в систему під ім'ям {loginData.Name}.");
+                    ServiceResponse<AccountDto> response = await _accService.LoginAsync(message.Chat.Id, status.AccountName, message.Text);
+                    if (!response.Success)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, response.Message);
+                        return;
+                    }
+
+                    await _botClient.SendMessage(message.Chat.Id, $"Ви увійшли в систему під ім'ям {response.Data.Name}.");
                     await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.roomsKeyboardMarkup);
                 }
                 catch (Exception ex)
@@ -61,8 +68,14 @@ namespace MonopolyBot.Telegram.Handlers.Status
             {
                 try
                 {
-                    AccountDto registerResult = await _accService.RegisterAsync(status.AccountName, message.Text);
-                    await _botClient.SendMessage(message.Chat.Id, $"Аккаунт {registerResult.Name} створено");
+                    ServiceResponse<AccountDto> response = await _accService.RegisterAsync(status.AccountName, message.Text);
+                    if (!response.Success)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, response.Message);
+                        return;
+                    }
+
+                    await _botClient.SendMessage(message.Chat.Id, $"Аккаунт {response.Data.Name} створено");
                 }
                 catch (Exception ex)
                 {
@@ -87,12 +100,18 @@ namespace MonopolyBot.Telegram.Handlers.Status
             {
                 try
                 {
-                    DeleteAccountDto deleteResult = await _accService.DeleteAccountAsync(message.Chat.Id, status.AccountName, message.Text);
-                    await _botClient.SendMessage(message.Chat.Id, $"Аккаунт {deleteResult.Name} успішно видалено");
+                    ServiceResponse<DeleteAccountDto> response = await _accService.DeleteAccountAsync(message.Chat.Id, status.AccountName, message.Text);
+                    if (!response.Success)
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, response.Message);
+                        return;
+                    }
+
+                    await _botClient.SendMessage(message.Chat.Id, $"Аккаунт {response.Data.Name} успішно видалено");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    await _botClient.SendMessage(message.Chat.Id, "Помилка при видаленні акаунту. Перевірте правильність введених даних.");
+                    await _botClient.SendMessage(message.Chat.Id, $"Помилка при видаленні акаунту: {ex.Message}");
                     return;
                 }
                 finally

@@ -32,7 +32,6 @@ namespace MonopolyBot.Application.Services
                     chatStatus.MaxNumberOfPlayers = null;
                 }
                 chatStatus.Status = state;
-                await _unitOfWork.ChatStatuses.Update(chatStatus);
             }
             else
             {
@@ -52,8 +51,6 @@ namespace MonopolyBot.Application.Services
                 existingStatus.AccountName = chatStatus.AccountName;
                 existingStatus.RoomId = chatStatus.RoomId;
                 existingStatus.MaxNumberOfPlayers = chatStatus.MaxNumberOfPlayers;
-
-                await _unitOfWork.ChatStatuses.Update(existingStatus);
             }
             else
             {
