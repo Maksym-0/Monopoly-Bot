@@ -25,30 +25,31 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<ProfileInfo>> GetMyDataAsync(long chatId)
         {
-            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetAuthorizedUserAsync(chatId);
 
-            if (!authResult.IsAuthorized)
+            if (!userResponse.Success)
             {
                 return new ServiceResponse<ProfileInfo>()
                 {
                     Success = false,
-                    Message = authResult.Message,
+                    Message = userResponse.Message,
                     Data = null,
-                    ErrorType = ErrorType.Unauthorized
+                    ErrorType = userResponse.ErrorType
                 };
             }
+            User user = userResponse.Data;
 
             ProfileInfo profile = new ProfileInfo()
             {
-                AccountId = authResult.User!.AccountId,
-                UserId = authResult.User.Id,
-                Name = authResult.User.Name
+                AccountId = user.AccountId,
+                UserId = user.Id,
+                Name = user.Name
             };
 
             return new ServiceResponse<ProfileInfo>()
             {
                 Success = true,
-                Message = authResult.Message,
+                Message = userResponse.Message,
                 Data = profile
             };
         }

@@ -5,6 +5,6 @@ namespace MonopolyBot.Core.Interfaces.Services
 {
     public interface IAuthorizationService
     {
-        Task<AuthorizationResult> GetAuthorizationResultAsync(long chatId);
+        Task<ServiceResponse<User>> GetAuthorizedUserAsync(long chatId);
     }
 }

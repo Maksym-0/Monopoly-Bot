@@ -25,16 +25,16 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<List<RoomDto>>> GetRoomsAsync(long chatId)
         {
-            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
-            if(!authResult.IsAuthorized)
+            ServiceResponse<User> userResponse = await _authorization.GetAuthorizedUserAsync(chatId);
+            if(!userResponse.Success)
                 return new ServiceResponse<List<RoomDto>>
                 {
                     Success = false,
-                    Message = authResult.Message,
+                    Message = userResponse.Message,
                     Data = null,
-                    ErrorType = ErrorType.Unauthorized
+                    ErrorType = userResponse.ErrorType
                 };
-            User user = authResult.User;
+            User user = userResponse.Data;
 
             ApiResponse<List<RoomDto>> response = await _roomClient.GetRoomsAsync(user.JWT);
             if (!response.Success)
@@ -55,18 +55,18 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<RoomDto>> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password)
         {
-            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
-            if (!authResult.IsAuthorized)
+            ServiceResponse<User> userResponse = await _authorization.GetAuthorizedUserAsync(chatId);
+            if (!userResponse.Success)
             {
                 return new ServiceResponse<RoomDto>()
                 {
                     Success = false,
-                    Message = authResult.Message,
+                    Message = userResponse.Message,
                     Data = null,
-                    ErrorType = ErrorType.Unauthorized
+                    ErrorType = userResponse.ErrorType
                 };
             }
-            User user = authResult.User;
+            User user = userResponse.Data;
 
             ApiResponse<RoomDto> response = await _roomClient.CreateRoomAsync(user.JWT, 
                 new CreateRoomRequest
@@ -97,18 +97,18 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<JoinRoomDto>> JoinRoomAsync(long chatId, Guid roomId, string? password)
         {
-            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
-            if(!authResult.IsAuthorized)
+            ServiceResponse<User> userResponse = await _authorization.GetAuthorizedUserAsync(chatId);
+            if(!userResponse.Success)
             {
                 return new ServiceResponse<JoinRoomDto>()
                 {
                     Success = false,
-                    Message = authResult.Message,
+                    Message = userResponse.Message,
                     Data = null,
-                    ErrorType = ErrorType.Unauthorized
+                    ErrorType = userResponse.ErrorType
                 };
             }
-            User user = authResult.User;
+            User user = userResponse.Data;
 
             ApiResponse<JoinRoomDto> response = await _roomClient.JoinRoomAsync(user.JWT, 
                 new JoinRoomRequest
@@ -150,18 +150,18 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<QuitRoomDto>> QuitRoomAsync(long chatId)
         {
-            AuthorizationResult authResult = await _authorization.GetAuthorizationResultAsync(chatId);
-            if(!authResult.IsAuthorized)
+            ServiceResponse<User> userResponse = await _authorization.GetAuthorizedUserAsync(chatId);
+            if(!userResponse.Success)
             {
                 return new ServiceResponse<QuitRoomDto>()
                 {
                     Success = false,
-                    Message = authResult.Message,
+                    Message = userResponse.Message,
                     Data = null,
                     ErrorType = ErrorType.Unauthorized
                 };
             }
-            User user = authResult.User;
+            User user = userResponse.Data;
 
             ApiResponse<QuitRoomDto> response = await _roomClient.QuitRoomAsync(user.JWT);
 

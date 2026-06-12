@@ -14,16 +14,18 @@ namespace MonopolyBot.Application.Service
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<AuthorizationResult> GetAuthorizationResultAsync(long chatId)
+        public async Task<ServiceResponse<User>> GetAuthorizedUserAsync(long chatId)
         {
             User? user = await _unitOfWork.Users.GetByChatId(chatId);
 
             if (user == null)
             {
-                return new AuthorizationResult()
+                return new ServiceResponse<User>
                 {
-                    IsAuthorized = false,
-                    Message = "Користувач не знайдений. Увійдіть в систему"
+                    Success = false,
+                    Message = "Користувач не авторизований. Увійдіть в систему",
+                    Data = null,
+                    ErrorType = Core.Enums.ErrorType.Unauthorized
                 };
             }
 
@@ -32,20 +34,23 @@ namespace MonopolyBot.Application.Service
                 await _unitOfWork.Users.DeleteByChatId(chatId);
                 await _unitOfWork.SaveChangesAsync();
 
-                return new AuthorizationResult()
+                return new ServiceResponse<User>
                 {
-                    IsAuthorized = false,
-                    Message = "Час авторизації вичерпано. Увійдіть в систему"
+                    Success = false,
+                    Message = "Термін дії сесії закінчився. Увійдіть в систему знову",
+                    Data = null,
+                    ErrorType = Core.Enums.ErrorType.Unauthorized
                 };
             }
             else
-                return new AuthorizationResult()
+            {
+                return new ServiceResponse<User>
                 {
-                    IsAuthorized = true,
-                    Message = "Авторизація успішна",
-                    User = user
+                    Success = true,
+                    Message = "Користувач авторизований",
+                    Data = user
                 };
-            
+            }
         }
     }
 }

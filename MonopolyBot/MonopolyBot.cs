@@ -121,17 +121,18 @@ namespace MonopolyBot
                 return;
             }
 
-            AuthorizationResult authResult = await authorizationService.GetAuthorizationResultAsync(message.Chat.Id);
-            if (!authResult.IsAuthorized)
+            ServiceResponse<Core.Models.Bot.User> authResult = await authorizationService.GetAuthorizedUserAsync(message.Chat.Id);
+            if (!authResult.Success)
             {
                 await contextService.ClearContextAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, authResult.Message, replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
                 return;
             }
+            Core.Models.Bot.User user = authResult.Data;
 
-            if (authResult.User.GameId != null)
+            if (user.GameId != null)
             {
-                if (authResult.User.RoomId != null)
+                if (user.RoomId != null)
                 {
                     await HandleGameCommandsAsync(message, serviceProvider);
                 }
