@@ -131,7 +131,7 @@ namespace MonopolyBot.Application.Service
 
             if (response.Data.IsGameStarted)
             {
-                List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomId(roomId);
+                List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomIdAsync(roomId);
 
                 foreach (var player in usersInRoom)
                 {
@@ -188,7 +188,7 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<List<long>>> GetChatIdsInRoomAsync(long playerChatId)
         {
-            User? user = await _unitOfWork.Users.GetByChatId(playerChatId);
+            User? user = await _unitOfWork.Users.GetByChatIdAsync(playerChatId);
             if (user == null)
                 return new ServiceResponse<List<long>>()
                 {
@@ -206,7 +206,7 @@ namespace MonopolyBot.Application.Service
                     ErrorType = ErrorType.ServiceError
                 };
 
-            List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomId(user.RoomId.Value);
+            List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomIdAsync(user.RoomId.Value);
 
             if (usersInRoom == null || usersInRoom.Count == 0)
                 return new ServiceResponse<List<long>>()

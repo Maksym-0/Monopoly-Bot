@@ -10,7 +10,7 @@ using MonopolyBot.Core;
 
 namespace MonopolyBot.DataAccess.ApiClients.Clients
 {
-    public class MonopolyClient : IAccountClient, IRoomClient, IGameClient
+    public class MonopolyClient : IAccountClient, IRoomClient, IGameClient, ITradingClient
     {
         private HttpClient _httpClient = new HttpClient();
 
@@ -32,7 +32,7 @@ namespace MonopolyBot.DataAccess.ApiClients.Clients
             var apiResponse = JsonConvert.DeserializeObject<ApiResponse<LoginDto>>(responseJson);
             return apiResponse;
         }
-        public async Task<ApiResponse<DeleteAccountDto>> DeleteAccount(AccountRequest account)
+        public async Task<ApiResponse<DeleteAccountDto>> DeleteAccountAsync(AccountRequest account)
         {
             string responseJson = await SendAccountRequestAsync(null, account, "/delete", HttpMethod.Delete);
             var apiResponse = JsonConvert.DeserializeObject<ApiResponse<DeleteAccountDto>>(responseJson);
@@ -133,18 +133,43 @@ namespace MonopolyBot.DataAccess.ApiClients.Clients
             return apiResponse;
         }
 
-        private async Task<string> SendAccountRequestAsync(string? jwt, AccountRequest? account, string? command, HttpMethod method)
+        public async Task<ApiResponse<TradeOfferDto>> GetCurrentTradeOfferAsync(string jwt, Guid gameId)
+        {
+            string responseJson = await SendTradeRequestAsync(jwt, null, gameId, null, HttpMethod.Get);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<TradeOfferDto>>(responseJson);
+            return apiResponse;
+        }
+        public async Task<ApiResponse<TradeOfferDto>> CreateTradeOfferAsync(string jwt, Guid gameId, CreateTradeOfferRequest dto)
+        {
+            string responseJson = await SendTradeRequestAsync(jwt, dto, gameId, "/create", HttpMethod.Post);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<TradeOfferDto>>(responseJson);
+            return apiResponse;
+        }
+        public async Task<ApiResponse<AcceptTradeDto>> AcceptTradeOfferAsync(string jwt, Guid gameId)
+        {
+            string responseJson = await SendTradeRequestAsync(jwt, null, gameId, "/accept", HttpMethod.Put);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<AcceptTradeDto>>(responseJson);
+            return apiResponse;
+        }
+        public async Task<ApiResponse<CancelTradeDto>> DeclineTradeOfferAsync(string jwt, Guid gameId)
+        {
+            string responseJson = await SendTradeRequestAsync(jwt, null, gameId, "/decline", HttpMethod.Delete);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<CancelTradeDto>>(responseJson);
+            return apiResponse;
+        }
+
+        private async Task<string> SendAccountRequestAsync(string? jwt, AccountRequest? dto, string? command, HttpMethod method)
         {
             HttpRequestMessage request;
-            if(command != null)
+            if (command != null)
                 request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiAccouuntHost}{command}");
             else
                 request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiAccouuntHost}");
             
-            if(jwt != null)
+            if (jwt != null)
                 request.Headers.Add("Authorization", $"Bearer {jwt}");
-            if (account != null)
-                request.Content = new StringContent(JsonConvert.SerializeObject(account), Encoding.UTF8, "application/json");
+            if (dto != null)
+                request.Content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
             
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
@@ -177,6 +202,23 @@ namespace MonopolyBot.DataAccess.ApiClients.Clients
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
             return responseJson;
+        }
+        private async Task<string> SendTradeRequestAsync(string jwt, CreateTradeOfferRequest? dto, Guid gameId, string? command, HttpMethod method)
+        {
+            HttpRequestMessage request;
+            if (command != null)
+                request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiGameHost}/{gameId}/trade{command}");
+            else 
+                request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiGameHost}/{gameId}/trade");
+
+            if (dto != null)
+                request.Content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
+
+            request.Headers.Add("Authorization", $"Bearer {jwt}");
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            string responeJson = await response.Content.ReadAsStringAsync();
+            return responeJson;
         }
     }
 }

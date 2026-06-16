@@ -20,27 +20,27 @@ namespace MonopolyBot.Telegram.Handlers.Command
             _accService = accService;
         }
 
-        public async Task HandleStartRegister(Message message)
+        public async Task HandleStartRegisterAsync(Message message)
         {
             await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingRegister);
             await _botClient.SendMessage(message.Chat.Id, "Реєстрацію розпочато. Введіть ім'я:");
         }
-        public async Task HandleStartLogin(Message message)
+        public async Task HandleStartLoginAsync(Message message)
         {
             await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingLogin);
             await _botClient.SendMessage(message.Chat.Id, "Вхід в обліковий запис розпочато. Введіть ім'я:");
         }
-        public async Task HandleStartDeleteAccount(Message message)
+        public async Task HandleStartDeleteAccountAsync(Message message)
         {
             await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingDeleteAccount);
             await _botClient.SendMessage(message.Chat.Id, "Видалення аккаунту розпочато. Введіть ім'я.");
         }
-        public async Task HandleRoomsMenu(Message message)
+        public async Task HandleRoomsMenuAsync(Message message)
         {
             await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.roomsKeyboardMarkup);
         }
 
-        public async Task HandleMe(Message message)
+        public async Task HandleMeAsync(Message message)
         {
             try
             {

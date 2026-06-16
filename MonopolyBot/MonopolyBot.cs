@@ -29,14 +29,14 @@ namespace MonopolyBot
             _serviceProvider = serviceProvider;
         }
 
-        internal async Task Start()
+        internal async Task StartAsync()
         {
-            _botClient.StartReceiving(HandlerUpdateAsync, HandlerError, _receiverOptions, _cancellationToken);
+            _botClient.StartReceiving(HandlerUpdateAsync, HandlerErrorAsync, _receiverOptions, _cancellationToken);
             var botMe = await _botClient.GetMe();
             Console.WriteLine($"Бот {botMe.Username} почав працювати");
             await Task.Delay(-1);
         }
-        private Task HandlerError(ITelegramBotClient botClient, Exception exception, CancellationToken cancellation)
+        private Task HandlerErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellation)
         {
             var ErrorMessage = exception switch
             {
@@ -66,40 +66,51 @@ namespace MonopolyBot
 
         private async Task HandlerCallbackAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, IServiceProvider serviceProvider)
         {
-            var callbackRoomHandler = serviceProvider.GetRequiredService<ICallbackRoomHandler>();
-            var callbackGameHandler = serviceProvider.GetRequiredService<ICallbackGameHandler>();
+            var callbackRoomHandler = serviceProvider.GetRequiredService<IRoomCallbackHandler>();
+            var callbackGameHandler = serviceProvider.GetRequiredService<IGameCallbackHandler>();
+            var callbackTradeHandler = serviceProvider.GetRequiredService<ITradeCallbackHandler>();
 
             var chatId = callbackQuery.Message.Chat.Id;
             var data = callbackQuery.Data;
 
             if (data.StartsWith("JoinRoom:"))
             {
-                await callbackRoomHandler.HandleCallbackJoinRoom(chatId, data);
+                await callbackRoomHandler.HandleJoinRoomAsync(chatId, data);
             }
             else
             if (data.StartsWith("LeaveRoom:"))
             {
-                await callbackRoomHandler.HandleCallbackLeaveRoom(chatId);
+                await callbackRoomHandler.HandleLeaveRoomAsync(chatId);
             }
             else
             if (data.StartsWith("CreateRoom:"))
             {
-                await callbackRoomHandler.HandleCallbackCreateRoom(chatId, data);
+                await callbackRoomHandler.HandleCreateRoomAsync(chatId, data);
             }
             else
             if (data.StartsWith("GameStatus:"))
             {
-                await callbackGameHandler.HandleCallbackGameStatus(chatId, data);
+                await callbackGameHandler.HandleGameStatusAsync(chatId, data);
             }
             else
             if (data.StartsWith("ReturnToGame:"))
             {
-                await callbackGameHandler.HandleCallbackReturnToGame(chatId, data);
+                await callbackGameHandler.HandleReturnToGameAsync(chatId, data);
             }
             else
             if (data.StartsWith("WatchGame:"))
             {
-                await callbackGameHandler.HandleCallbackWatchGame(chatId, data);
+                await callbackGameHandler.HandleWatchGameAsync(chatId, data);
+            }
+            else
+            if (data.StartsWith("Trade:"))
+            {
+                await callbackTradeHandler.HandleSetOffereeIdAsync(chatId, data);
+            }
+            else
+            if (data.StartsWith("TradeConfirm:"))
+            {
+                await callbackTradeHandler.HandleTradeConfirmAsync(chatId, data);
             }
         }
 
@@ -157,16 +168,16 @@ namespace MonopolyBot
             switch (message.Text)
             {
                 case "/start":
-                    await startMessageHandler.HandleStart(message);
+                    await startMessageHandler.HandleStartAsync(message);
                     return true;
                 case "Profile":
-                    await accountMessageHandler.HandleMe(message);
+                    await accountMessageHandler.HandleMeAsync(message);
                     return true;
                 case "Register":
-                    await accountMessageHandler.HandleStartRegister(message);
+                    await accountMessageHandler.HandleStartRegisterAsync(message);
                     return true;
                 case "Login":
-                    await accountMessageHandler.HandleStartLogin(message);
+                    await accountMessageHandler.HandleStartLoginAsync(message);
                     return true;
             }
             return false;
@@ -179,20 +190,20 @@ namespace MonopolyBot
             switch (message.Text)
             {
                 case "Delete Account":
-                    await accountMessageHandler.HandleStartDeleteAccount(message);
+                    await accountMessageHandler.HandleStartDeleteAccountAsync(message);
                     return;
                 case "Rooms Menu":
-                    await accountMessageHandler.HandleRoomsMenu(message);
+                    await accountMessageHandler.HandleRoomsMenuAsync(message);
                     return;
 
                 case "Create Room":
-                    await roomMessageHandler.HandleCreateRoom(message);
+                    await roomMessageHandler.HandleCreateRoomAsync(message);
                     return;
                 case "View Rooms":
-                    await roomMessageHandler.HandleGetRooms(message);
+                    await roomMessageHandler.HandleGetRoomsAsync(message);
                     return;
                 case "Accounts menu":
-                    await roomMessageHandler.HandleAccountsMenu(message);
+                    await roomMessageHandler.HandleAccountsMenuAsync(message);
                     return;
 
                 default:
@@ -202,39 +213,49 @@ namespace MonopolyBot
         }
         private async Task HandleGameCommandsAsync(Message message, IServiceProvider serviceProvider)
         {
-            var gameMessageHandler = serviceProvider.GetRequiredService<IGameCommandHandler>();
+            var gameCommandHandler = serviceProvider.GetRequiredService<IGameCommandHandler>();
+            var tradeCommandHandler = serviceProvider.GetRequiredService<ITradeCommandHandler>();
 
             switch (message.Text)
             {
                 case "All Game Status":
-                    await gameMessageHandler.HandleAllGameStatus(message);
+                    await gameCommandHandler.HandleAllGameStatusAsync(message);
                     return;
                 case "Game Status":
-                    await gameMessageHandler.HandleGameStatus(message);
+                    await gameCommandHandler.HandleGameStatusAsync(message);
                     return;
                 case "Roll Dice":
-                    await gameMessageHandler.HandleRollDices(message);
+                    await gameCommandHandler.HandleRollDicesAsync(message);
                     return;
                 case "Buy":
-                    await gameMessageHandler.HandleBuy(message);
+                    await gameCommandHandler.HandleBuyAsync(message);
                     return;
                 case "Pay Rent":
-                    await gameMessageHandler.HandlePayRent(message);
+                    await gameCommandHandler.HandlePayRentAsync(message);
                     return;
                 case "Pay to Leave Prison":
-                    await gameMessageHandler.HandlePayToLeavePrison(message);
+                    await gameCommandHandler.HandlePayToLeavePrisonAsync(message);
+                    return;
+                case "Trade":
+                    await tradeCommandHandler.HandleStartTradeAsync(message);
+                    return;
+                case "Accept Trade":
+                    await tradeCommandHandler.HandleAcceptTradeAsync(message);
+                    return;
+                case "Cancel/Decline Trade":
+                    await tradeCommandHandler.HandleCancelTradeAsync(message);
                     return;
                 case "Level Up":
-                    await gameMessageHandler.HandleLevelUp(message);
+                    await gameCommandHandler.HandleLevelUpAsync(message);
                     return;
                 case "Level Down":
-                    await gameMessageHandler.HandleLevelDown(message);
+                    await gameCommandHandler.HandleLevelDownAsync(message);
                     return;
                 case "End Action":
-                    await gameMessageHandler.HandleEndAction(message);
+                    await gameCommandHandler.HandleEndActionAsync(message);
                     return;
                 case "Leave Game":
-                    await gameMessageHandler.HandleLeaveGame(message);
+                    await gameCommandHandler.HandleLeaveGameAsync(message);
                     return;
 
                 default:
@@ -249,13 +270,13 @@ namespace MonopolyBot
             switch (message.Text)
             {
                 case "All Game Status":
-                    await gameMessageHandler.HandleAllGameStatus(message);
+                    await gameMessageHandler.HandleAllGameStatusAsync(message);
                     return;
                 case "Game Status":
-                    await gameMessageHandler.HandleGameStatus(message);
+                    await gameMessageHandler.HandleGameStatusAsync(message);
                     return;
                 case "End Watch":
-                    await gameMessageHandler.HandleEndWatchGame(message);
+                    await gameMessageHandler.HandleEndWatchGameAsync(message);
                     return;
 
                 default:
@@ -268,34 +289,54 @@ namespace MonopolyBot
             var accountStatusHandler = serviceProvider.GetRequiredService<IAccountStatusHandler>();
             var roomStatusHandler = serviceProvider.GetRequiredService<IRoomStatusHandler>();
             var gameStatusHandler = serviceProvider.GetRequiredService<IGameStatusHandler>();
+            var tradeStatusHandler = serviceProvider.GetRequiredService<ITradeStatusHandler>();
 
             switch (status.Status)
             {
                 case BotState.AwaitingLogin:
-                    await accountStatusHandler.HandleLoginStatus(message, status);
+                    await accountStatusHandler.HandleLoginAsync(message, status);
                     return;
                 case BotState.AwaitingRegister:
-                    await accountStatusHandler.HandleRegisterStatus(message, status);
+                    await accountStatusHandler.HandleRegisterAsync(message, status);
                     return;
                 case BotState.AwaitingDeleteAccount:
-                    await accountStatusHandler.HandleDeleteAccountStatus(message, status);
+                    await accountStatusHandler.HandleDeleteAsync(message, status);
                     return;
 
                 case BotState.AwaitingCreateRoom:
-                    await roomStatusHandler.HandleCreateRoomStatus(message, status);
+                    await roomStatusHandler.HandleCreateAsync(message, status);
                     return;
                 case BotState.AwaitingCreateRoomPassword:
-                    await roomStatusHandler.HandleCreateRoomPasswordStatus(message, status);
+                    await roomStatusHandler.HandleCreatePasswordAsync(message, status);
                     return;
                 case BotState.AwaitingJoinRoom:
-                    await roomStatusHandler.HandleJoinRoomStatus(message, status);
+                    await roomStatusHandler.HandleJoinAsync(message, status);
                     return;
 
                 case BotState.AwaitingLevelUpCell:
-                    await gameStatusHandler.HandleLevelUpStatus(message, status);
+                    await gameStatusHandler.HandleLevelUpAsync(message, status);
                     return;
                 case BotState.AwaitingLevelDownCell:
-                    await gameStatusHandler.HandleLevelDownStatus(message, status);
+                    await gameStatusHandler.HandleLevelDownAsync(message, status);
+                    return;
+
+                case BotState.AwaitingOfferee:
+                    await tradeStatusHandler.HandleAwaitingOffereeAsync(message);
+                    return;
+                case BotState.AwaitingGiveMoney:
+                    await tradeStatusHandler.HandleGiveMoneyAsync(message, status);
+                    return;
+                case BotState.AwaitingGiveCells:
+                    await tradeStatusHandler.HandleGiveCellsAsync(message, status);
+                    return;
+                case BotState.AwaitingWantedMoney:
+                    await tradeStatusHandler.HandleWantedMoneyAsync(message, status);
+                    return;
+                case BotState.AwaitingWantedCells:
+                    await tradeStatusHandler.HandleWantedCellsAsync(message, status);
+                    return;
+                case BotState.AwaitingConfirmation:
+                    await tradeStatusHandler.HandleAwaitingConfirmationAsync(message);
                     return;
             }
         }
@@ -309,7 +350,13 @@ namespace MonopolyBot
                 state == BotState.AwaitingCreateRoomPassword ||
                 state == BotState.AwaitingJoinRoom ||
                 state == BotState.AwaitingLevelUpCell ||
-                state == BotState.AwaitingLevelDownCell;
+                state == BotState.AwaitingLevelDownCell ||
+                state == BotState.AwaitingOfferee ||
+                state == BotState.AwaitingGiveMoney ||
+                state == BotState.AwaitingGiveCells ||
+                state == BotState.AwaitingWantedMoney ||
+                state == BotState.AwaitingWantedCells ||
+                state == BotState.AwaitingConfirmation;
         }
     }
 }

@@ -33,6 +33,7 @@ namespace MonopolyBot
                        new KeyboardButton [] {"Game Status", "All Game Status"},
                        new KeyboardButton [] {"Roll Dice"},
                        new KeyboardButton [] {"Buy", "Pay Rent", "Pay to Leave Prison"},
+                       new KeyboardButton [] {"Trade", "Accept Trade", "Cancel/Decline Trade"},
                        new KeyboardButton [] {"Level Up", "Level Down"},
                        new KeyboardButton [] {"End Action", "Leave Game"}
                         }

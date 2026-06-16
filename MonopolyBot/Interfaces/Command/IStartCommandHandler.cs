@@ -4,6 +4,6 @@ namespace MonopolyBot.Telegram.Interfaces.Command
 {
     internal interface IStartCommandHandler
     {
-        Task HandleStart(Message message);
+        Task HandleStartAsync(Message message);
     }
 }

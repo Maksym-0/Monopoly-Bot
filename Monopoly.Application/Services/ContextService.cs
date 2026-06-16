@@ -16,12 +16,12 @@ namespace MonopolyBot.Application.Services
 
         public async Task<ChatStatus?> GetStatusAsync(long chatId)
         {
-            return await _unitOfWork.ChatStatuses.GetByChatId(chatId);
+            return await _unitOfWork.ChatStatuses.GetByChatIdAsync(chatId);
         }
 
         public async Task SetStateAsync(long chatId, BotState state)
         {
-            ChatStatus? chatStatus = await _unitOfWork.ChatStatuses.GetByChatId(chatId);
+            ChatStatus? chatStatus = await _unitOfWork.ChatStatuses.GetByChatIdAsync(chatId);
 
             if (chatStatus != null)
             {
@@ -30,20 +30,26 @@ namespace MonopolyBot.Application.Services
                     chatStatus.AccountName = null;
                     chatStatus.RoomId = null;
                     chatStatus.MaxNumberOfPlayers = null;
+
+                    chatStatus.TradeOffereeId = null;
+                    chatStatus.TradeGiveMoney = null;
+                    chatStatus.TradeGiveCells = null;
+                    chatStatus.TradeWantedMoney = null;
+                    chatStatus.TradeWantedCells = null;
                 }
                 chatStatus.Status = state;
             }
             else
             {
                 chatStatus = new ChatStatus(chatId, state);
-                await _unitOfWork.ChatStatuses.Add(chatStatus);
+                await _unitOfWork.ChatStatuses.AddAsync(chatStatus);
             }
             await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UpdateContextDataAsync(ChatStatus chatStatus)
         {
-            ChatStatus? existingStatus = await _unitOfWork.ChatStatuses.GetByChatId(chatStatus.ChatId);
+            ChatStatus? existingStatus = await _unitOfWork.ChatStatuses.GetByChatIdAsync(chatStatus.ChatId);
             
             if (existingStatus != null)
             {
@@ -51,10 +57,16 @@ namespace MonopolyBot.Application.Services
                 existingStatus.AccountName = chatStatus.AccountName;
                 existingStatus.RoomId = chatStatus.RoomId;
                 existingStatus.MaxNumberOfPlayers = chatStatus.MaxNumberOfPlayers;
+
+                existingStatus.TradeOffereeId = chatStatus.TradeOffereeId;
+                existingStatus.TradeGiveMoney = chatStatus.TradeGiveMoney;
+                existingStatus.TradeGiveCells = chatStatus.TradeGiveCells;
+                existingStatus.TradeWantedMoney = chatStatus.TradeWantedMoney;
+                existingStatus.TradeWantedCells = chatStatus.TradeWantedCells;
             }
             else
             {
-                await _unitOfWork.ChatStatuses.Add(chatStatus);
+                await _unitOfWork.ChatStatuses.AddAsync(chatStatus);
             }
             
             await _unitOfWork.SaveChangesAsync();
@@ -66,7 +78,7 @@ namespace MonopolyBot.Application.Services
         }
         public async Task DeleteContextAsync(long chatId)
         {
-            await _unitOfWork.ChatStatuses.DeleteByChatId(chatId);
+            await _unitOfWork.ChatStatuses.DeleteByChatIdAsync(chatId);
         }
     }
 }

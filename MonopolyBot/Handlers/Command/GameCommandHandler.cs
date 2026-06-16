@@ -35,7 +35,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
             _gameService = gameService;
         }
 
-        public async Task HandleAllGameStatus(Message message)
+        public async Task HandleAllGameStatusAsync(Message message)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні статусу гри: {ex.Message}");
             }
         }
-        public async Task HandleGameStatus(Message message)
+        public async Task HandleGameStatusAsync(Message message)
         {
             try
             {
@@ -81,16 +81,21 @@ namespace MonopolyBot.Telegram.Handlers.Command
 
                 string boardStatusMessage = _messageFormatter.BuildBoardStatusMessage(response.Data);
                 string playersStatusMessage = _messageFormatter.BuildPlayersStatusMessage(response.Data);
+                string tradeMessage = _messageFormatter.BuildActiveTradeMessage(response.Data.CurrentTradeOffer);
 
                 await _botClient.SendMessage(message.Chat.Id, boardStatusMessage, parseMode: ParseMode.Html);
                 await _botClient.SendMessage(message.Chat.Id, playersStatusMessage, parseMode: ParseMode.Html);
+                if (!string.IsNullOrEmpty(tradeMessage))
+                {
+                    await _botClient.SendMessage(message.Chat.Id, tradeMessage, parseMode: ParseMode.Html);
+                }
             }
             catch (Exception ex)
             {
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні статусу гри: {ex.Message}");
             }
         }
-        public async Task HandleRollDices(Message message)
+        public async Task HandleRollDicesAsync(Message message)
         {
             try
             {
@@ -130,7 +135,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при кидку кубиків: {ex.Message}");
             }
         }
-        public async Task HandleBuy(Message message)
+        public async Task HandleBuyAsync(Message message)
         {
             try
             {
@@ -171,7 +176,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при купівлі клітини: {ex.Message}");
             }
         }
-        public async Task HandlePayRent(Message message)
+        public async Task HandlePayRentAsync(Message message)
         {
             try
             {
@@ -211,7 +216,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при оплаті: {ex.Message}");
             }
         }
-        public async Task HandlePayToLeavePrison(Message message)
+        public async Task HandlePayToLeavePrisonAsync(Message message)
         {
             try
             {
@@ -241,7 +246,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при оплаті: {ex.Message}");
             }
         }
-        public async Task HandleLevelUp(Message message)
+        public async Task HandleLevelUpAsync(Message message)
         {
             try
             {
@@ -253,7 +258,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при підвищенні рівня клітини: {ex.Message}");
             }
         }
-        public async Task HandleLevelDown(Message message)
+        public async Task HandleLevelDownAsync(Message message)
         {
             try
             {
@@ -265,7 +270,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при зниженні рівня клітини: {ex.Message}");
             }
         }
-        public async Task HandleEndAction(Message message)
+        public async Task HandleEndActionAsync(Message message)
         {
             try
             {
@@ -307,7 +312,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при завершенні дії: {ex.Message}");
             }
         }
-        public async Task HandleLeaveGame(Message message)
+        public async Task HandleLeaveGameAsync(Message message)
         {
             try
             {
@@ -343,7 +348,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка при виході з гри: {ex.Message}");
             }
         }
-        public async Task HandleEndWatchGame(Message message)
+        public async Task HandleEndWatchGameAsync(Message message)
         {
             try
             {

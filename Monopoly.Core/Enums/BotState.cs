@@ -16,6 +16,13 @@
         InGame,
         AwaitingLevelUpCell,
         AwaitingLevelDownCell,
+        
+        AwaitingOfferee,
+        AwaitingGiveMoney,
+        AwaitingGiveCells,
+        AwaitingWantedMoney,
+        AwaitingWantedCells,
+        AwaitingConfirmation,
 
         WatchingGame
     }

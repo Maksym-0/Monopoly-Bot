@@ -29,7 +29,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
             _gameService = gameService;
         }
 
-        public async Task HandleLevelUpStatus(Message message, ChatStatus status)
+        public async Task HandleLevelUpAsync(Message message, ChatStatus status)
         {
             try
             {
@@ -80,7 +80,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
                 await _contextService.UpdateContextDataAsync(status);
             }
         }
-        public async Task HandleLevelDownStatus(Message message, ChatStatus status)
+        public async Task HandleLevelDownAsync(Message message, ChatStatus status)
         {
             try
             {

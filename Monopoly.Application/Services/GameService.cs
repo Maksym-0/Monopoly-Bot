@@ -24,7 +24,7 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<GameStateDto>> GameStatusAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<GameStateDto>
@@ -57,7 +57,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<MoveDto>> RollDiceAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<MoveDto>
@@ -90,7 +90,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<PayDto>> PayRentAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<PayDto>
@@ -123,7 +123,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<PayDto>> PayToLeavePrisonAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<PayDto>
@@ -156,7 +156,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<BuyDto>> BuyCellAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<BuyDto>
@@ -189,7 +189,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<LevelChangeDto>> LevelUpCellAsync(long chatId, int cellNumber)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<LevelChangeDto>
@@ -222,7 +222,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<LevelChangeDto>> LevelDownCellAsync(long chatId, int cellNumber)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<LevelChangeDto>
@@ -255,7 +255,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<NextActionDto>> EndActionAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<NextActionDto>
@@ -288,7 +288,7 @@ namespace MonopolyBot.Application.Service
         }
         public async Task<ServiceResponse<LeaveGameDto>> LeaveGameAsync(long chatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(chatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(chatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<LeaveGameDto>
@@ -318,7 +318,7 @@ namespace MonopolyBot.Application.Service
 
             if (response.Data.IsGameOver)
             {
-                List<User> usersInGame = await _unitOfWork.Users.GetListByGameId(user.GameId.Value);
+                List<User> usersInGame = await _unitOfWork.Users.GetListByGameIdAsync(user.GameId.Value);
                 
                 foreach (var player in usersInGame)
                 {
@@ -444,7 +444,7 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<List<long>>> GetChatIdsInGameAsync(long palyerChatId)
         {
-            ServiceResponse<User> userResponse = await GetPlayerInGameAsync(palyerChatId);
+            ServiceResponse<User> userResponse = await _authorization.GetPlayerInGameAsync(palyerChatId);
             if (!userResponse.Success)
             {
                 return new ServiceResponse<List<long>>
@@ -457,7 +457,7 @@ namespace MonopolyBot.Application.Service
             }
             User user = userResponse.Data;
             
-            List<User> usersInGame = await _unitOfWork.Users.GetListByGameId(user.GameId.Value);
+            List<User> usersInGame = await _unitOfWork.Users.GetListByGameIdAsync(user.GameId.Value);
             List<long> chatIds = usersInGame.Select(u => u.ChatId).ToList();
 
             return new ServiceResponse<List<long>>
@@ -465,31 +465,6 @@ namespace MonopolyBot.Application.Service
                 Success = true,
                 Message = "Успішно отримано id чату гравців в грі",
                 Data = chatIds
-            };
-        }
-
-        private async Task<ServiceResponse<User>> GetPlayerInGameAsync(long chatId)
-        {
-            ServiceResponse<User> authResult = await _authorization.GetAuthorizedUserAsync(chatId);
-            if (!authResult.Success)
-            {
-                return authResult;
-            }
-            User user = authResult.Data;
-
-            if (user.GameId == null)
-                return new ServiceResponse<User>
-                {
-                    Success = false,
-                    Message = "Користувач не знаходиться в грі",
-                    Data = null,
-                    ErrorType = ErrorType.ServiceError
-                };
-            return new ServiceResponse<User>
-            {
-                Success = true,
-                Message = "Успішно отримано користувача в грі",
-                Data = user
             };
         }
     }

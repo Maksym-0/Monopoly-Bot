@@ -1,7 +1,9 @@
-﻿using MonopolyBot.Core.Interfaces.DataBase.UnitOfWork;
+﻿using MonopolyBot.Core.Enums;
+using MonopolyBot.Core.Interfaces.DataBase.UnitOfWork;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Core.Models.Bot;
 using MonopolyBot.Core.Models.Services;
+using System.Net;
 
 namespace MonopolyBot.Application.Service
 {
@@ -16,7 +18,7 @@ namespace MonopolyBot.Application.Service
 
         public async Task<ServiceResponse<User>> GetAuthorizedUserAsync(long chatId)
         {
-            User? user = await _unitOfWork.Users.GetByChatId(chatId);
+            User? user = await _unitOfWork.Users.GetByChatIdAsync(chatId);
 
             if (user == null)
             {
@@ -31,7 +33,7 @@ namespace MonopolyBot.Application.Service
 
             if (user.ExpiresAt < DateTime.Now)
             {
-                await _unitOfWork.Users.DeleteByChatId(chatId);
+                await _unitOfWork.Users.DeleteByChatIdAsync(chatId);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new ServiceResponse<User>
@@ -51,6 +53,30 @@ namespace MonopolyBot.Application.Service
                     Data = user
                 };
             }
+        }
+        public async Task<ServiceResponse<User>> GetPlayerInGameAsync(long chatId)
+        {
+            ServiceResponse<User> authResult = await GetAuthorizedUserAsync(chatId);
+            if (!authResult.Success)
+            {
+                return authResult;
+            }
+            User user = authResult.Data;
+
+            if (user.GameId == null)
+                return new ServiceResponse<User>
+                {
+                    Success = false,
+                    Message = "Користувач не знаходиться в грі",
+                    Data = null,
+                    ErrorType = ErrorType.ServiceError
+                };
+            return new ServiceResponse<User>
+            {
+                Success = true,
+                Message = "Успішно отримано користувача в грі",
+                Data = user
+            };
         }
     }
 }

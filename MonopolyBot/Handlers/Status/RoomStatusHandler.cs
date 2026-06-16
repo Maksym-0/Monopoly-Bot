@@ -27,7 +27,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
             _roomService = roomService;
         }
 
-        public async Task HandleJoinRoomStatus(Message message, ChatStatus status)
+        public async Task HandleJoinAsync(Message message, ChatStatus status)
         {
             try
             {
@@ -73,7 +73,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
                 await _contextService.UpdateContextDataAsync(status);
             }
         }
-        public async Task HandleCreateRoomStatus(Message message, ChatStatus status)
+        public async Task HandleCreateAsync(Message message, ChatStatus status)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
                 return;
             }
         }
-        public async Task HandleCreateRoomPasswordStatus(Message message, ChatStatus status)
+        public async Task HandleCreatePasswordAsync(Message message, ChatStatus status)
         {
             try
             {

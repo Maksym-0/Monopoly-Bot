@@ -13,25 +13,25 @@ namespace MonopolyBot.DataAccess.Postgres.Repositories
             _context = context;
         }
 
-        public async Task<ChatStatus?> GetByChatId(long chatId)
+        public async Task<ChatStatus?> GetByChatIdAsync(long chatId)
         {
             return await _context.ChatStatuses
                 .FirstOrDefaultAsync(cs => cs.ChatId == chatId);
         }
 
-        public async Task Add(ChatStatus chatStatus)
+        public async Task AddAsync(ChatStatus chatStatus)
         {
             await _context.ChatStatuses.AddAsync(chatStatus);
         }
         
-        public async Task Update(ChatStatus chatStatus)
+        public async Task UpdateAsync(ChatStatus chatStatus)
         {
             _context.ChatStatuses.Update(chatStatus);
         }
 
-        public async Task DeleteByChatId(long chatId)
+        public async Task DeleteByChatIdAsync(long chatId)
         {
-            ChatStatus? status = await GetByChatId(chatId);
+            ChatStatus? status = await GetByChatIdAsync(chatId);
 
             if(status != null)
             {

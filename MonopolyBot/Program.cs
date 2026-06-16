@@ -44,6 +44,7 @@ var service = new ServiceCollection();
 service.AddSingleton<IAccountClient, MonopolyClient>();
 service.AddSingleton<IRoomClient, MonopolyClient>();
 service.AddSingleton<IGameClient, MonopolyClient>();
+service.AddSingleton<ITradingClient, MonopolyClient>();
 
 service.AddDbContext<BotDbContext>(
     options =>
@@ -62,18 +63,22 @@ service.AddScoped<IContextService, ContextService>();
 service.AddScoped<IAccountService, AccountService>();
 service.AddScoped<IRoomService, RoomService>();
 service.AddScoped<IGameService, GameService>();
+service.AddScoped<ITradingService, TradingService>();
 
 service.AddScoped<IStartCommandHandler, StartCommandHandler>();
 service.AddScoped<IAccountCommandHandler, AccountCommandHandler>();
 service.AddScoped<IRoomCommandHandler, RoomCommandHandler>();
 service.AddScoped<IGameCommandHandler, GameCommandHandler>();
+service.AddScoped<ITradeCommandHandler, TradeCommandHandler >();
 
 service.AddScoped<IAccountStatusHandler, AccountStatusHandler>();
 service.AddScoped<IRoomStatusHandler, RoomStatusHandler>();
 service.AddScoped<IGameStatusHandler, GameStatusHandler>();
+service.AddScoped<ITradeStatusHandler, TradeStatusHandler>();
 
-service.AddScoped<ICallbackRoomHandler, CallbackRoomHandler>();
-service.AddScoped<ICallbackGameHandler, CallbackGameHandler>();
+service.AddScoped<IRoomCallbackHandler, RoomCallbackHandler>();
+service.AddScoped<IGameCallbackHandler, GameCallbackHandler>();
+service.AddScoped<ITradeCallbackHandler, TradeCallbackHandler>();
 
 service.AddSingleton<IMessageFormatter, MessageFormatter>();
 service.AddSingleton<IBroadcastService, BroadcastService>();
@@ -83,4 +88,4 @@ service.AddSingleton<MonopolyBot.MonopolyBot>();
 
 var provider = service.BuildServiceProvider();
 var monopolyBot = provider.GetRequiredService<MonopolyBot.MonopolyBot>();
-await monopolyBot.Start();
+await monopolyBot.StartAsync();

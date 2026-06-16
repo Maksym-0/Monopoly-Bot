@@ -1,5 +1,6 @@
 ﻿using MonopolyBot.Core.Models.Api.DTO.Games;
 using MonopolyBot.Core.Models.Api.DTO.Rooms;
+using MonopolyBot.Core.Models.Bot;
 using MonopolyBot.Telegram.Interfaces.Services;
 
 namespace MonopolyBot.Telegram.Services
@@ -80,7 +81,16 @@ namespace MonopolyBot.Telegram.Services
                 playerMessages.Add(playerBlock);
             }
 
-            return cellMessages.Concat(playerMessages).ToList();
+            string tradeBlock = BuildActiveTradeMessage(game.CurrentTradeOffer);
+
+            List<string> finalMessages = cellMessages.Concat(playerMessages).ToList();
+
+            if (!string.IsNullOrEmpty(tradeBlock))
+            {
+                finalMessages.Add(tradeBlock);
+            }
+
+            return finalMessages;
         }
         
         public string BuildBoardStatusMessage(GameStateDto game)
@@ -210,7 +220,8 @@ namespace MonopolyBot.Telegram.Services
                     $"Ваш баланс: {result.NewPlayerBalance}$\n" +
                     $"Баланс {result.ReceiverName}: {result.NewReceiverBalance}$";
             }
-            else
+
+            if (result.IsPrisonPay)
             {
                 selfMessage = $"Оплата {result.Amount}$ за вихід з тюрми здійснена. Ваш баланс: {result.NewPlayerBalance}$";
             }
@@ -219,17 +230,18 @@ namespace MonopolyBot.Telegram.Services
         }
         public string BuildOthersPayMessage(PayDto result)
         {
-            string othersMessage;
+            string othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ ";
 
             if (result.ReceiverId != null)
             {
-                othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ гравцю {result.ReceiverName}.\n" +
+                othersMessage += $"гравцю {result.ReceiverName}.\n" +
                     $"{result.PlayerName} баланс: {result.NewPlayerBalance}$\n" +
                     $"{result.ReceiverName} баланс: {result.NewReceiverBalance}$";
             }
-            else
+            
+            if (result.IsPrisonPay)
             {
-                othersMessage = $"{result.PlayerName} сплатив за вихід з тюрми {result.Amount}$. " +
+                othersMessage += $"за вихід з тюрми. " +
                     $"{result.PlayerName} баланс: {result.NewPlayerBalance}$";
             }
 
@@ -277,6 +289,71 @@ namespace MonopolyBot.Telegram.Services
             }
 
             return othersMessage;
+        }
+
+        public string BuildActiveTradeMessage(TradeOfferDto? tradeOfferDto)
+        {
+            if (tradeOfferDto == null)
+                return "";
+
+            string offererCells = tradeOfferDto.OffererProposition.CellNumbers.Count > 0 ?
+                string.Join(", ", tradeOfferDto.OffererProposition.CellNumbers) : "Нічого";
+
+            string offereeCells = tradeOfferDto.OffereeProposition.CellNumbers.Count > 0 ?
+                string.Join(", ", tradeOfferDto.OffereeProposition.CellNumbers) : "Нічого";
+
+            return $"\n\n<b>Активна торгова пропозиція:</b>\n" +
+           $"{tradeOfferDto.OffererName} віддає: {tradeOfferDto.OffererProposition.Money}$ та Клітинки [{offererCells}]\n" +
+           $"{tradeOfferDto.OffereeName} віддає: {tradeOfferDto.OffereeProposition.Money}$ та Клітинки [{offereeCells}]\n";
+        }
+        public string BuildTradeMessage(ChatStatus chatStatus)
+        {
+            string giveCellsText = chatStatus.TradeGiveCells != null && chatStatus.TradeGiveCells.Count > 0
+                ? string.Join(", ", chatStatus.TradeGiveCells)
+                : "Нічого";
+
+            string wantedCellsText = chatStatus.TradeWantedCells != null && chatStatus.TradeWantedCells.Count > 0
+                ? string.Join(", ", chatStatus.TradeWantedCells)
+                : "Нічого";
+
+            return "📝 <b>Ваша пропозиція обміну:</b>\n\n" +
+                   $"<b>Гравець:</b> {chatStatus.TradeOffereeName}\n\n" +
+                   "<b>Ви віддаєте:</b>\n" +
+                   $"💰 Гроші: {chatStatus.TradeGiveMoney}$\n" +
+                   $"🏢 Клітини: {giveCellsText}\n\n" +
+                   "<b>Ви хочете отримати:</b>\n" +
+                   $"💰 Гроші: {chatStatus.TradeWantedMoney}$\n" +
+                   $"🏢 Клітини: {wantedCellsText}\n\n" +
+                   "Відправити цю пропозицію?";
+        }
+
+        public string BuildSelfAcceptTradeMessage(AcceptTradeDto acceptTradeDto)
+        {
+            string receivedCells = acceptTradeDto.NewOffereeCells.Count > 0
+                ? string.Join(", ", acceptTradeDto.NewOffereeCells)
+                : "Нічого";
+
+            return $"✅ <b>Угоду успішно укладено!</b>\n" +
+                   $"Ви прийняли пропозицію від гравця <b>{acceptTradeDto.OffererName}</b>.\n\n" +
+                   $"Ваш новий баланс: <b>{acceptTradeDto.NewOffereeBalance}$</b>\n" +
+                   $"Ви отримали клітинки: [{receivedCells}]";
+
+        }
+        public string BuildOthersAcceptTradeMessage(AcceptTradeDto acceptTradeDto)
+        {
+            string offererReceivedCells = acceptTradeDto.NewOffererCells.Count > 0
+                ? string.Join(", ", acceptTradeDto.NewOffererCells)
+                : "Нічого";
+
+            string offereeReceivedCells = acceptTradeDto.NewOffereeCells.Count > 0
+                ? string.Join(", ", acceptTradeDto.NewOffereeCells)
+                : "Нічого";
+
+            return $"🤝 <b>Торгову угоду укладено!</b>\n" +
+                   $"<b>{acceptTradeDto.OffereeName}</b> прийняв пропозицію від <b>{acceptTradeDto.OffererName}</b>.\n\n" +
+                   $"<b>Нові статуси учасників:</b>\n" +
+                   $"👤 {acceptTradeDto.OffererName} ➔ Баланс: {acceptTradeDto.NewOffererBalance}$, Отримав клітинки: [{offererReceivedCells}]\n" +
+                   $"👤 {acceptTradeDto.OffereeName} ➔ Баланс: {acceptTradeDto.NewOffereeBalance}$, Отримав клітинки: [{offereeReceivedCells}]";
         }
 
         private string BuildCellStatusMessage(GameStateDto game, CellDto cell, List<PlayerDto> playersOnCell)

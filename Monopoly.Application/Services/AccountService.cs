@@ -97,7 +97,7 @@ namespace MonopolyBot.Application.Service
                 };
             }
 
-            User? user = await _unitOfWork.Users.GetByChatId(chatId);
+            User? user = await _unitOfWork.Users.GetByChatIdAsync(chatId);
             if (user == null)
             {
                 User response = new User()
@@ -113,7 +113,7 @@ namespace MonopolyBot.Application.Service
                     ExpiresAt = data.Data.ExpiresAt
                 };
 
-                await _unitOfWork.Users.Add(response);
+                await _unitOfWork.Users.AddAsync(response);
             }
             else
             {
@@ -140,11 +140,11 @@ namespace MonopolyBot.Application.Service
                 Name = name,
                 Password = password
             };
-            ApiResponse<DeleteAccountDto> data = await _accountClient.DeleteAccount(account);
+            ApiResponse<DeleteAccountDto> data = await _accountClient.DeleteAccountAsync(account);
 
             if (data.Success)
             {
-                await _unitOfWork.Users.DeleteByChatId(chatId);
+                await _unitOfWork.Users.DeleteByChatIdAsync(chatId);
                 await _unitOfWork.SaveChangesAsync();
                 return new ServiceResponse<DeleteAccountDto>()
                 {

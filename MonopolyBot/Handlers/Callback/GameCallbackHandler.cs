@@ -9,7 +9,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace MonopolyBot.Telegram.Handlers.Callback
 {
-    internal class CallbackGameHandler : ICallbackGameHandler
+    internal class GameCallbackHandler : IGameCallbackHandler
     {
         private readonly ITelegramBotClient _botClient;
         
@@ -18,7 +18,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
 
         private readonly IGameService _gameService;
 
-        public CallbackGameHandler(ITelegramBotClient botClient, IGameService gameService, IContextService contextService, 
+        public GameCallbackHandler(ITelegramBotClient botClient, IGameService gameService, IContextService contextService, 
             IMessageFormatter messageFormatter)
         {
             _botClient = botClient;
@@ -27,7 +27,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
             _messageFormatter = messageFormatter;
         }
 
-        public async Task HandleCallbackGameStatus(long chatId, string data)
+        public async Task HandleGameStatusAsync(long chatId, string data)
         {
             try
             {
@@ -45,14 +45,14 @@ namespace MonopolyBot.Telegram.Handlers.Callback
 
                 await _botClient.SendMessage(chatId, "Ви приєднались до гри", replyMarkup: KeyboardMarkups.gameKeyboardMarkup);
 
-                await SendGameStatusMessage(chatId, response.Data);
+                await SendGameStatusMessageAsync(chatId, response.Data);
             }
             catch (Exception ex)
             {
                 await _botClient.SendMessage(chatId, $"Помилка при отриманні статусу гри: {ex.Message}");
             }
         }
-        public async Task HandleCallbackReturnToGame(long chatId, string data)
+        public async Task HandleReturnToGameAsync(long chatId, string data)
         {
             try
             {
@@ -73,14 +73,14 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 await _contextService.SetStateAsync(chatId, BotState.InGame);
                 await _botClient.SendMessage(chatId, "Ви повернулись до гри", replyMarkup: KeyboardMarkups.gameKeyboardMarkup);
 
-                await SendGameStatusMessage(chatId, response.Data);
+                await SendGameStatusMessageAsync(chatId, response.Data);
             }
             catch (Exception ex)
             {
                 await _botClient.SendMessage(chatId, $"Помилка при поверненні до гри: {ex.Message}");
             }
         }
-        public async Task HandleCallbackWatchGame(long chatId, string data)
+        public async Task HandleWatchGameAsync(long chatId, string data)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 }
 
                 await _botClient.SendMessage(chatId, "Ви спостерігаєте за грою", replyMarkup: KeyboardMarkups.watchGameKeyboardMarkup);
-                await SendGameStatusMessage(chatId, response.Data);
+                await SendGameStatusMessageAsync(chatId, response.Data);
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
             }
         }
 
-        private async Task SendGameStatusMessage(long chatId, GameStateDto gameState)
+        private async Task SendGameStatusMessageAsync(long chatId, GameStateDto gameState)
         {
             string boardStatus = _messageFormatter.BuildBoardStatusMessage(gameState);
             string playersStatus = _messageFormatter.BuildPlayersStatusMessage(gameState);

@@ -1,5 +1,6 @@
 ﻿using MonopolyBot.Core.Models.Api.DTO.Games;
 using MonopolyBot.Core.Models.Api.DTO.Rooms;
+using MonopolyBot.Core.Models.Bot;
 
 namespace MonopolyBot.Telegram.Interfaces.Services
 {
@@ -24,5 +25,10 @@ namespace MonopolyBot.Telegram.Interfaces.Services
         string BuildSelfLevelChangeMessage(LevelChangeDto levelChangeDto);
         string BuildOthersLevelChangeMessage(LevelChangeDto levelChangeDto);
 
+        string BuildActiveTradeMessage(TradeOfferDto? tradeOfferDto);
+        string BuildTradeMessage(ChatStatus chatStatus);
+
+        string BuildSelfAcceptTradeMessage(AcceptTradeDto acceptTradeDto);
+        string BuildOthersAcceptTradeMessage(AcceptTradeDto acceptTradeDto);
     }
 }

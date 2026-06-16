@@ -23,7 +23,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
             _accService = accService;
         }
 
-        public async Task HandleLoginStatus(Message message, ChatStatus status)
+        public async Task HandleLoginAsync(Message message, ChatStatus status)
         {
             if (status.AccountName == null)
             {
@@ -56,7 +56,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
                 }
             }
         }
-        public async Task HandleRegisterStatus(Message message, ChatStatus status)
+        public async Task HandleRegisterAsync(Message message, ChatStatus status)
         {
             if (status.AccountName == null)
             {
@@ -88,7 +88,7 @@ namespace MonopolyBot.Telegram.Handlers.Status
                 }
             }
         }
-        public async Task HandleDeleteAccountStatus(Message message, ChatStatus status)
+        public async Task HandleDeleteAsync(Message message, ChatStatus status)
         {
             if (status.AccountName == null)
             {

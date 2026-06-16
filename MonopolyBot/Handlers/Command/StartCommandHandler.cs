@@ -16,7 +16,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
             _contextService = contextService;
         }
 
-        public async Task HandleStart(Message message)
+        public async Task HandleStartAsync(Message message)
         {
             await _contextService.SetStateAsync(message.Chat.Id, Core.Enums.BotState.None);
             await _botClient.SendMessage(message.Chat.Id, "Вітаємо! Це бот для гри в Монополію. Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);

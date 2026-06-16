@@ -5,8 +5,8 @@ namespace MonopolyBot.Telegram.Interfaces.Status
 {
     internal interface IAccountStatusHandler
     {
-        Task HandleLoginStatus(Message message, ChatStatus status);
-        Task HandleRegisterStatus(Message message, ChatStatus status);
-        Task HandleDeleteAccountStatus(Message message, ChatStatus status);
+        Task HandleLoginAsync(Message message, ChatStatus status);
+        Task HandleRegisterAsync(Message message, ChatStatus status);
+        Task HandleDeleteAsync(Message message, ChatStatus status);
     }
 }

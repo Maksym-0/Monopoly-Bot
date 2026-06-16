@@ -91,6 +91,7 @@ namespace MonopolyBot.Telegram.Services
             string firstMessage = "Потомчний статус гри:\n";
             string cellMessage = _messageFormatter.BuildBoardStatusMessage(game);
             string playersMessage = _messageFormatter.BuildPlayersStatusMessage(game);
+            string tradeMessage = _messageFormatter.BuildActiveTradeMessage(game.CurrentTradeOffer);
 
             foreach (long id in chatIds)
             {
@@ -112,6 +113,17 @@ namespace MonopolyBot.Telegram.Services
             {
                 Task task = _botClient.SendMessage(id, playersMessage, parseMode: ParseMode.Html, replyMarkup: KeyboardMarkups.gameKeyboardMarkup);
                 tasks.Add(task);
+            }
+            await Task.WhenAll(tasks);
+            tasks.Clear();
+
+            if (!string.IsNullOrEmpty(tradeMessage))
+            {
+                foreach (long id in chatIds)
+                {
+                    Task task = _botClient.SendMessage(id, tradeMessage, parseMode: ParseMode.Html, replyMarkup: KeyboardMarkups.gameKeyboardMarkup);
+                    tasks.Add(task);
+                }
             }
             await Task.WhenAll(tasks);
         }

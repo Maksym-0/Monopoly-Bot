@@ -11,6 +11,8 @@
         public int NewPlayerBalance { get; set; }
         public int? NewReceiverBalance { get; set; }
 
+        public bool IsPrisonPay { get; set; }
+
         public int Amount { get; set; }
     }
 }

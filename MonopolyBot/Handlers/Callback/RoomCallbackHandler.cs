@@ -9,7 +9,7 @@ using Telegram.Bot;
 
 namespace MonopolyBot.Telegram.Handlers.Callback
 {
-    internal class CallbackRoomHandler : ICallbackRoomHandler
+    internal class RoomCallbackHandler : IRoomCallbackHandler
     {
         ITelegramBotClient _botClient;
 
@@ -19,7 +19,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
         IRoomService _roomService;
         IGameService _gameService;
 
-        public CallbackRoomHandler(ITelegramBotClient botClient, IContextService contextService, IBroadcastService broadcastService, 
+        public RoomCallbackHandler(ITelegramBotClient botClient, IContextService contextService, IBroadcastService broadcastService, 
             IRoomService roomService, IGameService gameService)
         {
             _botClient = botClient;
@@ -29,7 +29,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
             _gameService = gameService;
         }
 
-        public async Task HandleCallbackJoinRoom(long chatId, string data)
+        public async Task HandleJoinRoomAsync(long chatId, string data)
         {
             Guid id = Guid.Parse(data.Split(':')[1]);
             string passwordStatus = data.Split(':')[2];
@@ -89,7 +89,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 }
             }
         }
-        public async Task HandleCallbackCreateRoom(long chatId, string data)
+        public async Task HandleCreateRoomAsync(long chatId, string data)
         {
             string passwordStatus = data.Split(':')[1];
             string? password;
@@ -145,7 +145,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 return;
             }
         }
-        public async Task HandleCallbackLeaveRoom(long chatId)
+        public async Task HandleLeaveRoomAsync(long chatId)
         {
             try
             {

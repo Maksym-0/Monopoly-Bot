@@ -9,5 +9,6 @@
         public List<PlayerDto> Players { get; set; } = new();
         public BoardDto Board { get; set; }
         public TurnStateDto TurnState { get; set; }
+        public TradeOfferDto? CurrentTradeOffer { get; set; }
     }
 }

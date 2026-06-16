@@ -9,6 +9,6 @@ namespace MonopolyBot.Core.Interfaces.Clients
         public Task<ApiResponse<AccountDto>> MeAsync(string jwt);
         public Task<ApiResponse<AccountDto>> RegisterAsync(AccountRequest account);
         public Task<ApiResponse<LoginDto>> LoginAndReturnJWTAsync(AccountRequest account);
-        public Task<ApiResponse<DeleteAccountDto>> DeleteAccount(AccountRequest account);
+        public Task<ApiResponse<DeleteAccountDto>> DeleteAccountAsync(AccountRequest account);
     }
 }
