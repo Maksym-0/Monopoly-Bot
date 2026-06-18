@@ -123,13 +123,11 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 return;
             }
         }
-
         public async Task HandleCreateRoomAsync(Message message)
         {
             await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingCreateRoom);
             await _botClient.SendMessage(message.Chat.Id, "Створення кімнати розпочато. Введіть максимальну кількість гравців (2-4):");
         }
-
         public async Task HandleAccountsMenuAsync(Message message)
         {
             await _botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);

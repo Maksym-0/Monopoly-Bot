@@ -25,5 +25,42 @@ namespace MonopolyBot.Core.Models.Bot
             Status = botState;
         }
         public ChatStatus() { }
+
+        public bool IsAwaitingState()
+        {
+            return Status == BotState.AwaitingLogin ||
+                Status == BotState.AwaitingRegister ||
+                Status == BotState.AwaitingDeleteAccount ||
+                Status == BotState.AwaitingCreateRoom ||
+                Status == BotState.AwaitingCreateRoomPassword ||
+                Status == BotState.AwaitingJoinRoom ||
+                Status == BotState.AwaitingLevelUpCell ||
+                Status == BotState.AwaitingLevelDownCell ||
+                Status == BotState.AwaitingOfferee ||
+                Status == BotState.AwaitingGiveMoney ||
+                Status == BotState.AwaitingGiveCells ||
+                Status == BotState.AwaitingWantedMoney ||
+                Status == BotState.AwaitingWantedCells ||
+                Status == BotState.AwaitingConfirmation;
+        }
+        public bool IsTradeInProgress()
+        {
+            return Status == BotState.AwaitingOfferee ||
+                   Status == BotState.AwaitingGiveMoney ||
+                   Status == BotState.AwaitingGiveCells ||
+                   Status == BotState.AwaitingWantedMoney ||
+                   Status == BotState.AwaitingWantedCells ||
+                   Status == BotState.AwaitingConfirmation;
+        }
+        public void ClearTrade()
+        {
+            Status = BotState.InGame;
+            TradeOffereeId = null;
+            TradeOffereeName = null;
+            TradeGiveMoney = null;
+            TradeGiveCells = null;
+            TradeWantedMoney = null;
+            TradeWantedCells = null;
+        }
     }
 }

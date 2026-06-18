@@ -80,7 +80,7 @@ namespace MonopolyBot
             else
             if (data.StartsWith("LeaveRoom:"))
             {
-                await callbackRoomHandler.HandleLeaveRoomAsync(chatId);
+                await callbackRoomHandler.HandleLeaveRoomAsync(chatId, data);
             }
             else
             if (data.StartsWith("CreateRoom:"))
@@ -126,7 +126,7 @@ namespace MonopolyBot
                 return;
 
             ChatStatus? status = await contextService.GetStatusAsync(message.Chat.Id);
-            if (status != null && IsAwaitingState(status.Status))
+            if (status != null && status.IsAwaitingState())
             {
                 await HandleStatusCommandsAsync(message, serviceProvider, status);
                 return;
@@ -321,7 +321,7 @@ namespace MonopolyBot
                     return;
 
                 case BotState.AwaitingOfferee:
-                    await tradeStatusHandler.HandleAwaitingOffereeAsync(message);
+                    await tradeStatusHandler.HandleInvalidOffereeInputAsync(message);
                     return;
                 case BotState.AwaitingGiveMoney:
                     await tradeStatusHandler.HandleGiveMoneyAsync(message, status);
@@ -336,27 +336,9 @@ namespace MonopolyBot
                     await tradeStatusHandler.HandleWantedCellsAsync(message, status);
                     return;
                 case BotState.AwaitingConfirmation:
-                    await tradeStatusHandler.HandleAwaitingConfirmationAsync(message);
+                    await tradeStatusHandler.HandleInvalidConfirmationInputAsync(message);
                     return;
             }
-        }
-
-        private bool IsAwaitingState(BotState state)
-        {
-            return state == BotState.AwaitingLogin ||
-                state == BotState.AwaitingRegister ||
-                state == BotState.AwaitingDeleteAccount ||
-                state == BotState.AwaitingCreateRoom ||
-                state == BotState.AwaitingCreateRoomPassword ||
-                state == BotState.AwaitingJoinRoom ||
-                state == BotState.AwaitingLevelUpCell ||
-                state == BotState.AwaitingLevelDownCell ||
-                state == BotState.AwaitingOfferee ||
-                state == BotState.AwaitingGiveMoney ||
-                state == BotState.AwaitingGiveCells ||
-                state == BotState.AwaitingWantedMoney ||
-                state == BotState.AwaitingWantedCells ||
-                state == BotState.AwaitingConfirmation;
         }
     }
 }

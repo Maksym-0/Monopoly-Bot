@@ -124,9 +124,20 @@ namespace MonopolyBot.Telegram.Handlers.Command
                 ServiceResponse<CancelTradeDto> response = await _tradingService.CancelTradeAsync(message.Chat.Id);
                 if (response.Success)
                 {
-                    await _botClient.SendMessage(message.Chat.Id, "Торгівля успішно скасована.");
+                    ServiceResponse<List<long>> chatIdsInGame = await _gameService.GetChatIdsInGameAsync(message.Chat.Id);
+                    if (chatIdsInGame.Success)
+                    {
+                        string selfMessage = _messageFormatter.BuildSelfCancelTradeMessage(response.Data);
+                        string othersMessage = _messageFormatter.BuildOthersCancelTradeMessage(response.Data);
+
+                        await _broadcastService.SendPersonalizedMessageAsync(message.Chat.Id, selfMessage, chatIdsInGame.Data, othersMessage);
+                    }
+                    else
+                    {
+                        await _botClient.SendMessage(message.Chat.Id, "Торгівля успішно скасована.");
+                    }
                 }
-                else if (!response.Success && IsTradeInProgress(chatStatus))
+                else if (!response.Success && chatStatus != null && chatStatus.IsTradeInProgress())
                 {
                     await _botClient.SendMessage(message.Chat.Id, "Процес створення торгівлі припинено");
                 }
@@ -142,13 +153,7 @@ namespace MonopolyBot.Telegram.Handlers.Command
 
                 if (chatStatus != null)
                 {
-                    chatStatus.Status = BotState.InGame;
-                    chatStatus.TradeOffereeId = null;
-                    chatStatus.TradeGiveMoney = null;
-                    chatStatus.TradeGiveCells = null;
-                    chatStatus.TradeWantedMoney = null;
-                    chatStatus.TradeWantedCells = null;
-
+                    chatStatus.ClearTrade();
                     await _contextService.UpdateContextDataAsync(chatStatus);
                 }
             }
@@ -156,17 +161,6 @@ namespace MonopolyBot.Telegram.Handlers.Command
             {
                 await _botClient.SendMessage(message.Chat.Id, $"Помилка під час скасування торгівлі: {ex.Message}");
             }
-        }
-
-        private bool IsTradeInProgress(ChatStatus? chatStatus)
-        {
-            return chatStatus != null &&
-                (chatStatus.Status == BotState.AwaitingOfferee ||
-                chatStatus.Status == BotState.AwaitingGiveMoney ||
-                chatStatus.Status == BotState.AwaitingGiveCells ||
-                chatStatus.Status == BotState.AwaitingWantedMoney ||
-                chatStatus.Status == BotState.AwaitingWantedCells ||
-                chatStatus.Status == BotState.AwaitingConfirmation);
         }
     }
 }

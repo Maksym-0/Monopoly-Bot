@@ -30,5 +30,8 @@ namespace MonopolyBot.Telegram.Interfaces.Services
 
         string BuildSelfAcceptTradeMessage(AcceptTradeDto acceptTradeDto);
         string BuildOthersAcceptTradeMessage(AcceptTradeDto acceptTradeDto);
+
+        string BuildSelfCancelTradeMessage(CancelTradeDto cancelTradeDto);
+        string BuildOthersCancelTradeMessage(CancelTradeDto cancelTradeDto);
     }
 }

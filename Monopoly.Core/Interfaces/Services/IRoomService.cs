@@ -5,11 +5,12 @@ namespace MonopolyBot.Core.Interfaces.Services
 {
     public interface IRoomService
     {
-        public Task<ServiceResponse<List<RoomDto>>> GetRoomsAsync(long chatId);
-        public Task<ServiceResponse<RoomDto>> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password);
-        public Task<ServiceResponse<JoinRoomDto>> JoinRoomAsync(long chatId, Guid roomId, string? password);
-        public Task<ServiceResponse<QuitRoomDto>> QuitRoomAsync(long chatId);
+        Task<ServiceResponse<List<RoomDto>>> GetRoomsAsync(long chatId);
+        Task<ServiceResponse<RoomDto>> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password);
+        Task<ServiceResponse<JoinRoomDto>> JoinRoomAsync(long chatId, Guid roomId, string? password);
+        Task<ServiceResponse<QuitRoomDto>> QuitRoomAsync(long chatId);
 
-        public Task<ServiceResponse<List<long>>> GetChatIdsInRoomAsync(long playerChatId);
+        Task<ServiceResponse<List<long>>> GetChatIdsInRoomAsync(long playerChatId);
+        Task<ServiceResponse<List<long>>> GetChatIdsByRoomIdAsync(Guid roomId);
     }
 }

@@ -302,9 +302,13 @@ namespace MonopolyBot.Telegram.Services
             string offereeCells = tradeOfferDto.OffereeProposition.CellNumbers.Count > 0 ?
                 string.Join(", ", tradeOfferDto.OffereeProposition.CellNumbers) : "Нічого";
 
-            return $"\n\n<b>Активна торгова пропозиція:</b>\n" +
-           $"{tradeOfferDto.OffererName} віддає: {tradeOfferDto.OffererProposition.Money}$ та Клітинки [{offererCells}]\n" +
-           $"{tradeOfferDto.OffereeName} віддає: {tradeOfferDto.OffereeProposition.Money}$ та Клітинки [{offereeCells}]\n";
+            return $"\n\n<b>Активна торгова пропозиція мій гравцями {tradeOfferDto.OffererName} та {tradeOfferDto.OffereeName}:</b>\n" +
+           $"{tradeOfferDto.OffererName} віддає:\n" +
+           $"💰 Гроші: {tradeOfferDto.OffererProposition.Money}$\n" +
+           $"🏢 Клітини [{offererCells}]\n\n" +
+           $"{tradeOfferDto.OffereeName} віддає:\n" +
+           $"💰 Гроші: {tradeOfferDto.OffereeProposition.Money}$\n" +
+           $"🏢 Клітини [{offereeCells}]";
         }
         public string BuildTradeMessage(ChatStatus chatStatus)
         {
@@ -354,6 +358,15 @@ namespace MonopolyBot.Telegram.Services
                    $"<b>Нові статуси учасників:</b>\n" +
                    $"👤 {acceptTradeDto.OffererName} ➔ Баланс: {acceptTradeDto.NewOffererBalance}$, Отримав клітинки: [{offererReceivedCells}]\n" +
                    $"👤 {acceptTradeDto.OffereeName} ➔ Баланс: {acceptTradeDto.NewOffereeBalance}$, Отримав клітинки: [{offereeReceivedCells}]";
+        }
+
+        public string BuildSelfCancelTradeMessage(CancelTradeDto cancelTradeDto)
+        {
+            return $"Торгівлю успішно скасовано";
+        }
+        public string BuildOthersCancelTradeMessage(CancelTradeDto cancelTradeDto)
+        {
+            return $"Гравець <b>{cancelTradeDto.CancelerName}</b> скасував торгову угоду";
         }
 
         private string BuildCellStatusMessage(GameStateDto game, CellDto cell, List<PlayerDto> playersOnCell)

@@ -23,11 +23,11 @@ namespace MonopolyBot.Telegram.Handlers.Status
             _contextService = contextService;
         }
 
-        public async Task HandleAwaitingOffereeAsync(Message message)
+        public async Task HandleInvalidOffereeInputAsync(Message message)
         {
             await _botClient.SendMessage(message.Chat.Id, "Будь ласка, скористайтеся кнопками під попереднім повідомленням.");
         }
-        public async Task HandleAwaitingConfirmationAsync(Message message)
+        public async Task HandleInvalidConfirmationInputAsync(Message message)
         {
             await _botClient.SendMessage(message.Chat.Id, "Будь ласка, скористайтеся кнопками під попереднім повідомленням.");
         }

@@ -88,7 +88,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                         return;
                     }
 
-                    CancelTrade(chatStatus);
+                    chatStatus.ClearTrade();
                     await _contextService.UpdateContextDataAsync(chatStatus);
 
                     await _botClient.SendMessage(chatId, "Пропозицію угоди надіслано");
@@ -108,7 +108,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 }
                 if (command == "Cancel")
                 {
-                    CancelTrade(chatStatus);
+                    chatStatus.ClearTrade();
                     await _contextService.UpdateContextDataAsync(chatStatus);
                     await _botClient.SendMessage(chatId, "Створення пропозиції скасовано", replyMarkup: KeyboardMarkups.gameKeyboardMarkup);
                 }
@@ -118,17 +118,6 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 await _botClient.SendMessage(chatId, $"Помилка під час підтвердження/скасування торгівлі: {ex.Message}");
                 return;
             }
-        }
-
-        private void CancelTrade(ChatStatus chatStatus)
-        {
-            chatStatus.Status = BotState.InGame;
-            chatStatus.TradeOffereeId = null;
-            chatStatus.TradeOffereeName = null;
-            chatStatus.TradeGiveMoney = null;
-            chatStatus.TradeGiveCells = null;
-            chatStatus.TradeWantedMoney = null;
-            chatStatus.TradeWantedCells = null;
         }
     }
 }

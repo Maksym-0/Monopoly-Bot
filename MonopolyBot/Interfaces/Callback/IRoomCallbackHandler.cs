@@ -4,6 +4,6 @@
     {
         Task HandleJoinRoomAsync(long chatId, string data);
         Task HandleCreateRoomAsync(long chatId, string data);
-        Task HandleLeaveRoomAsync(long chatId);
+        Task HandleLeaveRoomAsync(long chatId, string data);
     }
 }

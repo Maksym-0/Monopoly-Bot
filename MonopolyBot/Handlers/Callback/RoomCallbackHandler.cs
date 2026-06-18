@@ -122,16 +122,16 @@ namespace MonopolyBot.Telegram.Handlers.Callback
 
                     ServiceResponse<RoomDto> roomResponse = await _roomService.CreateRoomAsync(chatId, status.MaxNumberOfPlayers.Value, password);
                     if(!roomResponse.Success)
-                        {
-                            await _contextService.SetStateAsync(chatId, BotState.None);
-                            await _botClient.SendMessage(chatId, roomResponse.Message);
+                    {
+                        await _contextService.SetStateAsync(chatId, BotState.None);
+                        await _botClient.SendMessage(chatId, roomResponse.Message);
 
-                            if(roomResponse.ErrorType == ErrorType.Unauthorized)
-                            {
-                                await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-                            }
-                            return;
+                        if(roomResponse.ErrorType == ErrorType.Unauthorized)
+                        {
+                            await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
                         }
+                        return;
+                    }
                     status.Status = BotState.InRoom;
                     await _contextService.UpdateContextDataAsync(status);
 
@@ -145,43 +145,47 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                 return;
             }
         }
-        public async Task HandleLeaveRoomAsync(long chatId)
+        public async Task HandleLeaveRoomAsync(long chatId, string data)
         {
             try
             {
+                Guid roomId = Guid.Parse(data.Split(":")[1]);
                 ChatStatus? userStatus = await _contextService.GetStatusAsync(chatId);
 
                 List<long> playersToNotify = new List<long>();
                 
-                ServiceResponse<List<long>> gameChatIdsResponse = await _gameService.GetChatIdsInGameAsync(chatId);
-                ServiceResponse<List<long>> roomChatIdsResponse = await _roomService.GetChatIdsInRoomAsync(chatId);
-                
-                if (!gameChatIdsResponse.Success && !roomChatIdsResponse.Success)
+                ServiceResponse<List<long>> roomChatIdsResponse = await _roomService.GetChatIdsByRoomIdAsync(roomId);
+                if (roomChatIdsResponse.Success)
+                {
+                    playersToNotify.AddRange(roomChatIdsResponse.Data);
+                }
+                else if (roomChatIdsResponse.ErrorType == ErrorType.Unauthorized)
                 {
                     await _botClient.SendMessage(chatId, roomChatIdsResponse.Message);
-
-                    if (roomChatIdsResponse.ErrorType == ErrorType.Unauthorized || gameChatIdsResponse.ErrorType == ErrorType.Unauthorized)
-                    {
-                        await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
-                    }
+                    await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
                     return;
                 }
-                else if (!gameChatIdsResponse.Success && roomChatIdsResponse.Success)
+
+                ServiceResponse<List<long>> gameChatIdsResponse = await _gameService.GetChatIdsInGameAsync(chatId);
+                if (gameChatIdsResponse.Success)
                 {
-                    playersToNotify = roomChatIdsResponse.Data;
+                    playersToNotify.AddRange(gameChatIdsResponse.Data);
                 }
-                else if (gameChatIdsResponse.Success && !roomChatIdsResponse.Success)
+                else if (gameChatIdsResponse.ErrorType == ErrorType.Unauthorized)
                 {
-                    playersToNotify = gameChatIdsResponse.Data;
-                }   
-                
+                    await _botClient.SendMessage(chatId, gameChatIdsResponse.Message);
+                    await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
+                    return;
+                }
+
+                playersToNotify = playersToNotify.Distinct().ToList();
 
                 ServiceResponse<QuitRoomDto> result = await _roomService.QuitRoomAsync(chatId);
                 if (!result.Success)
                 {
                     await _botClient.SendMessage(chatId, result.Message);
 
-                    if(result.ErrorType == ErrorType.Unauthorized)
+                    if (result.ErrorType == ErrorType.Unauthorized)
                     {
                         await _botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: KeyboardMarkups.loginKeyboardMarkup);
                     }

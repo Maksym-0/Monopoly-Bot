@@ -206,7 +206,7 @@ namespace MonopolyBot.Application.Service
                     ErrorType = ErrorType.ServiceError
                 };
 
-            List<User> usersInRoom = await _unitOfWork.Users.GetListByRoomIdAsync(user.RoomId.Value);
+            List<User>? usersInRoom = await _unitOfWork.Users.GetListByRoomIdAsync(user.RoomId.Value);
 
             if (usersInRoom == null || usersInRoom.Count == 0)
                 return new ServiceResponse<List<long>>()
@@ -216,6 +216,30 @@ namespace MonopolyBot.Application.Service
                     Data = null,
                     ErrorType = ErrorType.ServiceError
                 };
+
+            List<long> chatIds = usersInRoom.Select(u => u.ChatId).ToList();
+
+            return new ServiceResponse<List<long>>()
+            {
+                Success = true,
+                Message = "Id гравців в кімнаті отримано",
+                Data = chatIds
+            };
+        }
+        public async Task<ServiceResponse<List<long>>> GetChatIdsByRoomIdAsync(Guid roomId)
+        {
+            List<User>? usersInRoom = await _unitOfWork.Users.GetListByRoomIdAsync(roomId);
+
+            if (usersInRoom == null || usersInRoom.Count == 0)
+            {
+                return new ServiceResponse<List<long>>()
+                {
+                    Success = false,
+                    Message = "Користувачі в кімнаті не знайдені",
+                    Data = null,
+                    ErrorType = ErrorType.ServiceError
+                };
+            }
 
             List<long> chatIds = usersInRoom.Select(u => u.ChatId).ToList();
 
