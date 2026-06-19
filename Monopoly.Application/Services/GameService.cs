@@ -313,9 +313,6 @@ namespace MonopolyBot.Application.Service
                 };
             }
 
-            user.GameId = null;
-            user.RoomId = null;
-
             if (response.Data.IsGameOver)
             {
                 List<User> usersInGame = await _unitOfWork.Users.GetListByGameIdAsync(user.GameId.Value);
@@ -329,6 +326,9 @@ namespace MonopolyBot.Application.Service
                     }
                 }
             }
+
+            user.GameId = null;
+            user.RoomId = null;
 
             await _unitOfWork.SaveChangesAsync();
 

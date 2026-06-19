@@ -124,8 +124,10 @@ namespace MonopolyBot.Telegram.Handlers.Status
                     return;
                 }
 
-                await _botClient.SendMessage(message.Chat.Id, $"Кімната {response.Data.RoomId} створена.");
+                status.ClearRoomState();
                 status.Status = BotState.InRoom;
+                
+                await _botClient.SendMessage(message.Chat.Id, $"Кімната {response.Data.RoomId} створена.");
             }
             catch (Exception ex)
             {

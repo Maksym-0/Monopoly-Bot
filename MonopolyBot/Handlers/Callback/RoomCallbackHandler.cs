@@ -132,6 +132,8 @@ namespace MonopolyBot.Telegram.Handlers.Callback
                         }
                         return;
                     }
+
+                        status.ClearRoomState();
                     status.Status = BotState.InRoom;
                     await _contextService.UpdateContextDataAsync(status);
 
@@ -211,8 +213,7 @@ namespace MonopolyBot.Telegram.Handlers.Callback
 
                 if (userStatus != null)
                 {
-                    userStatus.Status = BotState.None;
-                    userStatus.RoomId = null;
+                    userStatus.ClearRoomState();
                     await _contextService.UpdateContextDataAsync(userStatus);
                 }
                 else

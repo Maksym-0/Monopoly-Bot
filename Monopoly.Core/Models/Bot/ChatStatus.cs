@@ -62,5 +62,12 @@ namespace MonopolyBot.Core.Models.Bot
             TradeWantedMoney = null;
             TradeWantedCells = null;
         }
+
+        public void ClearRoomState()
+        {
+            Status = BotState.None;
+            RoomId = null;
+            MaxNumberOfPlayers = null;
+        }
     }
 }

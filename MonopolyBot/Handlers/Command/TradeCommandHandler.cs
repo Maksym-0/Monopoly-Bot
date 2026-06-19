@@ -23,11 +23,15 @@ namespace MonopolyBot.Telegram.Handlers.Command
         private readonly IGameService _gameService;
         private readonly ITradingService _tradingService;
 
-        public TradeCommandHandler(ITelegramBotClient telegramBotClient, IContextService contextService, IAuthorizationService authorizationService, IGameService gameService, ITradingService tradingService)
+        public TradeCommandHandler(ITelegramBotClient telegramBotClient, 
+            IContextService contextService, IAuthorizationService authorizationService, IMessageFormatter messageFormatter, IBroadcastService broadcastService,
+            IGameService gameService, ITradingService tradingService)
         {
             _botClient = telegramBotClient;
             _contextService = contextService;
             _authorizationService = authorizationService;
+            _messageFormatter = messageFormatter;
+            _broadcastService = broadcastService;
             _gameService = gameService;
             _tradingService = tradingService;
         }

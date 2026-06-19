@@ -1,6 +1,7 @@
 ﻿using MonopolyBot.Core.Enums;
 using MonopolyBot.Core.Interfaces.Services;
 using MonopolyBot.Core.Models.Api.DTO.Rooms;
+using MonopolyBot.Core.Models.Bot;
 using MonopolyBot.Core.Models.Services;
 using MonopolyBot.Telegram.Interfaces.Command;
 using MonopolyBot.Telegram.Interfaces.Services;
@@ -125,7 +126,19 @@ namespace MonopolyBot.Telegram.Handlers.Command
         }
         public async Task HandleCreateRoomAsync(Message message)
         {
-            await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingCreateRoom);
+            ChatStatus? status = await _contextService.GetStatusAsync(message.Chat.Id);
+
+            if (status != null)
+            {
+                status.ClearRoomState();
+                status.Status = BotState.AwaitingCreateRoom;
+                await _contextService.UpdateContextDataAsync(status);
+            }
+            else
+            {
+                await _contextService.SetStateAsync(message.Chat.Id, BotState.AwaitingCreateRoom);
+            }
+
             await _botClient.SendMessage(message.Chat.Id, "Створення кімнати розпочато. Введіть максимальну кількість гравців (2-4):");
         }
         public async Task HandleAccountsMenuAsync(Message message)
