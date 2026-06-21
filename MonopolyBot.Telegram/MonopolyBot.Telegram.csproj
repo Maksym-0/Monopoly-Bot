@@ -25,10 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Monopoly.Application\MonopolyBot.Application.csproj" />
-    <ProjectReference Include="..\Monopoly.Core\MonopolyBot.Core.csproj" />
-    <ProjectReference Include="..\Monopoly.DataAccess.Postgres\MonopolyBot.DataAccess.Postgres.csproj" />
-    <ProjectReference Include="..\MonopolyBot.DataAccess.ApiClient\MonopolyBot.DataAccess.ApiClients.csproj" />
+    <ProjectReference Include="..\MonopolyBot.Application\MonopolyBot.Application.csproj" />
+    <ProjectReference Include="..\MonopolyBot.Core\MonopolyBot.Core.csproj" />
+    <ProjectReference Include="..\MonopolyBot.DataAccess.Postgres\MonopolyBot.DataAccess.Postgres.csproj" />
+    <ProjectReference Include="..\MonopolyBot.DataAccess.ApiClients\MonopolyBot.DataAccess.ApiClients.csproj" />
   </ItemGroup>
 
   <ItemGroup>

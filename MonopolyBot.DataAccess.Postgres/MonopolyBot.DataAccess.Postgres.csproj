@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Monopoly.Core\MonopolyBot.Core.csproj" />
+    <ProjectReference Include="..\MonopolyBot.Core\MonopolyBot.Core.csproj" />
   </ItemGroup>
 
 </Project>
