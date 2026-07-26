@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  monopoly-bot-db:
+    image: postgres:15-alpine
+    container_name: monopoly-bot-postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_BOT_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - bot_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_BOT_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  monopolybot.telegram:
+    image: ${DOCKER_REGISTRY-}monopolybottelegram
+    container_name: monopoly-telegram-bot
+    build:
+      context: .
+      dockerfile: MonopolyBot.Telegram/Dockerfile
+    depends_on:
+      monopoly-bot-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - BotSettings__Token=${BOT_TOKEN}
+      - DbConnectionStrings__DefaultConnection=Host=monopoly-bot-db;Port=5432;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_BOT_DB}
+      - ApiConnectionString__ApiAddress=${API_ADDRESS}
+
+volumes:
+  bot_pgdata:

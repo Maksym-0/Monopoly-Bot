@@ -87,5 +87,19 @@ service.AddSingleton<ITelegramBotClient>(new TelegramBotClient(Constants.BotID))
 service.AddSingleton<MonopolyBot.MonopolyBot>();
 
 var provider = service.BuildServiceProvider();
+
+using (var scope = provider.CreateScope())
+{
+    try
+    {
+        var context = scope.ServiceProvider.GetRequiredService<BotDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Помилка міграції БД бота: {ex.Message}");
+    }
+}
+
 var monopolyBot = provider.GetRequiredService<MonopolyBot.MonopolyBot>();
 await monopolyBot.StartAsync();
