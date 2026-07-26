@@ -71,20 +71,20 @@
 
 ### Варіант 1: Через Docker
 
-1. Створіть файл `.env` на основі `env.example` та вкажіть ваш `BOT_TOKEN`, дані від БД та URL вашого Monopoly API.
-2. Виконайте команду в кореневій папці:
+3. Створіть файл `.env` на основі `env.example` та вкажіть ваш `BOT_TOKEN`, дані від БД та URL вашого Monopoly API.
+4. Виконайте команду в кореневій папці:
    ```bash
    docker-compose up --build
    ```
 
 ### Варіант 2: Запуск вручну
 
-1. Вкажіть токен Telegram, рядок підключення до локальної PostgreSQL та адреси хостів вашого Monopoly API у файлі `appsettings.json` (або `secrets.json`). 
-2. Застосуйте міграції для створення локальної БД бота через PowerShell (Package Manager Console):
+3. Вкажіть токен Telegram, рядок підключення до локальної PostgreSQL та адреси хостів вашого Monopoly API у файлі `appsettings.json` (або `secrets.json`). 
+4. Застосуйте міграції для створення локальної БД бота через PowerShell (Package Manager Console):
    ```powershell
    Update-Database
    ```
-3. Переконайтеся, що Monopoly REST API запущено, та запустіть проєкт бота:
+5. Переконайтеся, що Monopoly REST API запущено, та запустіть проєкт бота:
    ```bash
    dotnet run
    ```
